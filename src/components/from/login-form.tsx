@@ -7,19 +7,46 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
 import { loginCustomerSchema } from "@/validation";
 import { useState } from "react";
 import { Eye, EyeClosed } from "lucide-react";
+import { useLogin } from "@/hooks";
+import { useRouter } from "next/navigation";
+import { toast } from "../ui/toast";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(true);
+  const router = useRouter();
+
+  const { mutate: login, isPending: loginPending } = useLogin();
   const form = useForm({
     defaultValues: {
-      email: "",
-      password: "",
+      email: "admin1@gmail.com",
+      password: "12345678",
     },
     validators: {
       onSubmit: loginCustomerSchema,
     },
     onSubmit: ({ value }) => {
-      console.log(value);
+      const loginData = {
+        email: value.email,
+        password: value.password,
+      };
+
+      login(loginData, {
+        onSuccess: (res) => {
+          toast.add({
+            title: "Login Successful",
+            description: "Welcome Back",
+            type: "success",
+          });
+          router.push("/");
+        },
+        onError: (error) => {
+          toast.add({
+            title: "Authorization Failure",
+            description: error.message || "Login Failed,Something went wrong",
+            type: "error",
+          });
+        },
+      });
     },
   });
 
