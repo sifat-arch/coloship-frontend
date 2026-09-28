@@ -3,20 +3,28 @@
 import { useForm } from "@tanstack/react-form";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Field, FieldError, FieldGroup, FieldLabel } from "../ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+  FieldSeparator,
+} from "../ui/field";
 import { loginCustomerSchema } from "@/validation";
 import { useState } from "react";
 import { Eye, EyeClosed } from "lucide-react";
-import { useLogin } from "@/hooks";
+import { useGoogleOAuth, useLogin } from "@/hooks";
 import { useRouter } from "next/navigation";
 import { toast } from "../ui/toast";
 import { Spinner } from "../ui/spinner";
+import { GoogleLogin } from "@react-oauth/google";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(true);
   const router = useRouter();
 
   const { mutate: login, isPending: loginPending } = useLogin();
+  const { mutate: googleLogin } = useGoogleOAuth();
   const form = useForm({
     defaultValues: {
       email: "admin1@gmail.com",
@@ -50,6 +58,44 @@ const LoginForm = () => {
       });
     },
   });
+
+  const handleGoogleSuccess = (credentialResponse: { credential?: string }) => {
+    const idToken = credentialResponse.credential;
+    if (!idToken) {
+      toast.add({
+        title: "Google OAuth Failed",
+        description: "Something went wrong,please try again",
+      });
+      return;
+    }
+
+    googleLogin(
+      { idToken },
+      {
+        onSuccess: () => {
+          toast.add({
+            title: "Logged in with google successfully",
+            description: "Welcome Back",
+            type: "success",
+          });
+          router.push("/");
+        },
+        onError: (err) => {
+          toast.add({
+            title: err.message || "Google OAuth Failed",
+            description: "Something went wrong,please try again",
+            type: "error",
+          });
+        },
+      },
+    );
+  };
+  const handleGoogleError = () => {
+    toast.add({
+      title: "Google OAuth Failed",
+      description: "Something went wrong,please try again",
+    });
+  };
 
   return (
     <div className="w-full">
@@ -176,6 +222,24 @@ const LoginForm = () => {
           </Button>
         </FieldGroup>
       </form>
+
+      {/* Separator */}
+      <div className="my-4">
+        <FieldSeparator className="my-0">Or</FieldSeparator>
+      </div>
+
+      {/* Google Login */}
+      <div className="flex w-full justify-center">
+        <GoogleLogin
+          text="signin_with"
+          shape="pill"
+          theme="outline"
+          size="large"
+          width="323"
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+        />
+      </div>
 
       {/* Register */}
       <p className="mt-6 text-center text-sm text-muted-foreground">
