@@ -1,7 +1,14 @@
 import apiClient from "@/lib/apiClient";
+import { ILoginPayload, IRegisterPayload } from "@/types";
 
-export const userLogin = (payload: { email: string; password: string }) => {
+export const userLogin = (payload: ILoginPayload) => {
   return apiClient("/auth/login", {
+    method: "POST",
+    body: payload,
+  });
+};
+export const userRegistration = (payload: IRegisterPayload) => {
+  return apiClient("/auth/register", {
     method: "POST",
     body: payload,
   });

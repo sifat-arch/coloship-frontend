@@ -1,8 +1,6 @@
 "use client";
-
 import { useForm } from "@tanstack/react-form";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
+import React, { useState } from "react";
 import {
   Field,
   FieldError,
@@ -10,56 +8,66 @@ import {
   FieldLabel,
   FieldSeparator,
 } from "../ui/field";
-import { loginCustomerSchema } from "@/validation";
-import { useState } from "react";
+import { Input } from "../ui/input";
 import { Eye, EyeClosed } from "lucide-react";
-import { useGoogleOAuth, useLogin } from "@/hooks";
-import { useRouter } from "next/navigation";
-import { toast } from "../ui/toast";
-import { Spinner } from "../ui/spinner";
-import { GoogleLogin } from "@react-oauth/google";
+import { Button } from "../ui/button";
 import GoogleLoginComponent from "../modules/google-login/GoogleLogin";
+import { registerCustomerSchema } from "@/validation";
+import { useRegister } from "@/hooks";
+import { toast } from "../ui/toast";
+import { useRouter } from "next/navigation";
+import { Spinner } from "../ui/spinner";
 
-const LoginForm = () => {
+const RegisterForm = () => {
   const [showPassword, setShowPassword] = useState(true);
+
+  const { mutate: register, isPending: registerPending } = useRegister();
   const router = useRouter();
-
-  const { mutate: login, isPending: loginPending } = useLogin();
-
   const form = useForm({
     defaultValues: {
-      email: "admin1@gmail.com",
+      name: "Sifat",
+      email: "sifatnix@gmail.com",
       password: "12345678",
+      confirmPassword: "12345678",
     },
     validators: {
-      onSubmit: loginCustomerSchema,
+      onSubmit: registerCustomerSchema,
     },
     onSubmit: ({ value }) => {
-      const loginData = {
+      const registrationData = {
+        name: value.name,
         email: value.email,
         password: value.password,
       };
 
-      login(loginData, {
+      register(registrationData, {
         onSuccess: (res) => {
+          if (!res.success) {
+            toast.add({
+              title: "Server Failed",
+              description: "Registration Failure Because server failed",
+              type: "error",
+            });
+          }
           toast.add({
-            title: "Login Successful",
-            description: "Welcome Back",
+            title: "Register Successful",
+            description: "Please verify Your Account",
             type: "success",
           });
-          router.push("/");
+          const params = new URLSearchParams({ email: registrationData.email });
+          router.push(`/register/verify-account?${params.toString()}`);
         },
         onError: (error) => {
           toast.add({
-            title: "Authorization Failure",
-            description: error.message || "Login Failed,Something went wrong",
+            title: "Registration Failure",
+            description:
+              error.message || "Registration Failed,Something went wrong",
             type: "error",
           });
         },
       });
     },
   });
-
   return (
     <div className="w-full">
       {/* Heading */}
@@ -81,6 +89,39 @@ const LoginForm = () => {
         }}
       >
         <FieldGroup className="gap-5">
+          {/* name */}
+          <form.Field name="name">
+            {(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel
+                    htmlFor={field.name}
+                    className="text-sm font-medium"
+                  >
+                    Your Name
+                  </FieldLabel>
+
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    type="text"
+                    placeholder="you@example.com"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    autoComplete="email"
+                    aria-invalid={isInvalid}
+                    className="h-11"
+                  />
+
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+          </form.Field>
           {/* Email */}
           <form.Field name="email">
             {(field) => {
@@ -130,13 +171,6 @@ const LoginForm = () => {
                     >
                       Password
                     </FieldLabel>
-
-                    <a
-                      href="/forgot-password"
-                      className="text-sm font-medium text-primary hover:underline"
-                    >
-                      Forgot password?
-                    </a>
                   </div>
                   <div className="relative">
                     <Input
@@ -169,19 +203,67 @@ const LoginForm = () => {
             }}
           </form.Field>
 
+          {/* confirm password */}
+
+          <form.Field name="confirmPassword">
+            {(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+
+              return (
+                <Field data-invalid={isInvalid}>
+                  <div className="flex items-center justify-between">
+                    <FieldLabel
+                      htmlFor={field.name}
+                      className="text-sm font-medium"
+                    >
+                      Confirm Password
+                    </FieldLabel>
+                  </div>
+                  <div className="relative">
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Enter your password"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      autoComplete="current-password"
+                      aria-invalid={isInvalid}
+                      className="h-11"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      {showPassword ? (
+                        <EyeClosed size={15} />
+                      ) : (
+                        <Eye size={15} />
+                      )}
+                    </button>
+                  </div>
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+          </form.Field>
           {/* Submit */}
           <Button
             type="submit"
             className="mt-1 h-11 w-full font-medium"
-            disabled={loginPending}
+            disabled={registerPending}
           >
-            {loginPending ? (
+            {registerPending ? (
               <>
                 <Spinner /> Submitting
               </>
             ) : (
               "Submit"
             )}
+            Register
           </Button>
         </FieldGroup>
       </form>
@@ -196,16 +278,13 @@ const LoginForm = () => {
 
       {/* Register */}
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <a
-          href="/register"
-          className="font-medium text-primary hover:underline"
-        >
-          Create account
+        Already have an account?{" "}
+        <a href="/login" className="font-medium text-primary hover:underline">
+          Login
         </a>
       </p>
     </div>
   );
 };
 
-export default LoginForm;
+export default RegisterForm;

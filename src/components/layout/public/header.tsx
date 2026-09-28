@@ -48,7 +48,6 @@ const Header = () => {
       <div className="flex justify-between items-center h-full max-w-7xl mx-auto">
         <div className="flex items-center gap-1">
           <Logo />
-          <span className="text-lg font-bold">Coloship</span>
         </div>
         <div className="flex gap-4">
           {routes.map((route) => (
