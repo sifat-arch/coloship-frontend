@@ -10,6 +10,7 @@ import { Eye, EyeClosed } from "lucide-react";
 import { useLogin } from "@/hooks";
 import { useRouter } from "next/navigation";
 import { toast } from "../ui/toast";
+import { Spinner } from "../ui/spinner";
 
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(true);
@@ -160,8 +161,18 @@ const LoginForm = () => {
           </form.Field>
 
           {/* Submit */}
-          <Button type="submit" className="mt-1 h-11 w-full font-medium">
-            Login
+          <Button
+            type="submit"
+            className="mt-1 h-11 w-full font-medium"
+            disabled={loginPending}
+          >
+            {loginPending ? (
+              <>
+                <Spinner /> Submitting
+              </>
+            ) : (
+              "Submit"
+            )}
           </Button>
         </FieldGroup>
       </form>

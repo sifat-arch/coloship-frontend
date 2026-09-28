@@ -6,3 +6,11 @@ export const userLogin = (payload: { email: string; password: string }) => {
     body: payload,
   });
 };
+export const userLogout = () => {
+  return apiClient("/auth/logout", {
+    method: "POST",
+  });
+};
+export const UserGetMe = () => {
+  return apiClient("/auth/me");
+};
