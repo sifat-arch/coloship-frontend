@@ -1,5 +1,7 @@
 import {
+  forgotPassword,
   googleOAuth,
+  resetPassword,
   UserGetMe,
   userLogin,
   userLogout,
@@ -34,6 +36,16 @@ export const useGetMe = () => {
 export const useLogout = () => {
   return useMutation({
     mutationFn: userLogout,
+  });
+};
+export const useForgotPassword = () => {
+  return useMutation({
+    mutationFn: forgotPassword,
+  });
+};
+export const useResetPassword = () => {
+  return useMutation({
+    mutationFn: resetPassword,
   });
 };
 export const useGoogleOAuth = () => {

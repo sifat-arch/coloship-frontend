@@ -10,50 +10,48 @@ import {
   FieldLabel,
   FieldSeparator,
 } from "../ui/field";
-import { loginCustomerSchema } from "@/validation";
-import { useState } from "react";
-import { Eye, EyeClosed } from "lucide-react";
-import { useGoogleOAuth, useLogin } from "@/hooks";
-import { useRouter } from "next/navigation";
+import { resetPasswordValidationSchema } from "@/validation";
+
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "../ui/toast";
 import { Spinner } from "../ui/spinner";
-import { GoogleLogin } from "@react-oauth/google";
-import GoogleLoginComponent from "../modules/google-login/GoogleLogin";
-import Link from "next/link";
+import { useResetPassword } from "@/hooks";
 
-const LoginForm = () => {
-  const [showPassword, setShowPassword] = useState(true);
+const ResetPasswordForm = () => {
   const router = useRouter();
-
-  const { mutate: login, isPending: loginPending } = useLogin();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") || "";
+  const { mutate: resetPass, isPending: resetPassLoading } = useResetPassword();
 
   const form = useForm({
     defaultValues: {
-      email: "admin1@gmail.com",
-      password: "12345678",
+      email: email,
+      otp: "",
+      newPassword: "",
     },
     validators: {
-      onSubmit: loginCustomerSchema,
+      onSubmit: resetPasswordValidationSchema,
     },
     onSubmit: ({ value }) => {
-      const loginData = {
+      const payload = {
         email: value.email,
-        password: value.password,
+        otp: value.otp,
+        newPassword: value.newPassword,
       };
-
-      login(loginData, {
+      resetPass(payload, {
         onSuccess: (res) => {
           toast.add({
-            title: "Login Successful",
-            description: "Welcome Back",
+            title: "OTP send Successful",
+            description: "Please Reset Your password",
             type: "success",
           });
-          router.push("/");
+          router.push("/login");
         },
         onError: (error) => {
           toast.add({
-            title: "Authorization Failure",
-            description: error.message || "Login Failed,Something went wrong",
+            title: "Email Verification Failure",
+            description:
+              error.message || "Password Reset Failed,Something went wrong",
             type: "error",
           });
         },
@@ -66,11 +64,11 @@ const LoginForm = () => {
       {/* Heading */}
       <div className="mb-8">
         <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          Welcome back
+          Reset Your Password
         </h1>
 
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Enter your email and password to access your Coloship account.
+          Enter OTP and set your new password.
         </p>
       </div>
 
@@ -116,8 +114,44 @@ const LoginForm = () => {
             }}
           </form.Field>
 
-          {/* Password */}
-          <form.Field name="password">
+          {/* otp */}
+
+          <form.Field name="otp">
+            {(field) => {
+              const isInvalid =
+                field.state.meta.isTouched && !field.state.meta.isValid;
+
+              return (
+                <Field data-invalid={isInvalid}>
+                  <FieldLabel
+                    htmlFor={field.name}
+                    className="text-sm font-medium"
+                  >
+                    Six Digit OTP
+                  </FieldLabel>
+
+                  <Input
+                    id={field.name}
+                    name={field.name}
+                    type="number"
+                    placeholder="123456"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    autoComplete="email"
+                    aria-invalid={isInvalid}
+                    className="h-11"
+                  />
+
+                  {isInvalid && <FieldError errors={field.state.meta.errors} />}
+                </Field>
+              );
+            }}
+          </form.Field>
+
+          {/* new password */}
+
+          <form.Field name="newPassword">
             {(field) => {
               const isInvalid =
                 field.state.meta.isTouched && !field.state.meta.isValid;
@@ -129,22 +163,15 @@ const LoginForm = () => {
                       htmlFor={field.name}
                       className="text-sm font-medium"
                     >
-                      Password
+                      New Password
                     </FieldLabel>
-
-                    <Link
-                      href="/login/forgot-password"
-                      className="text-sm font-medium text-primary hover:underline"
-                    >
-                      Forgot password?
-                    </Link>
                   </div>
                   <div className="relative">
                     <Input
                       id={field.name}
                       name={field.name}
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      type="text"
+                      placeholder="Enter your new password"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
@@ -163,9 +190,9 @@ const LoginForm = () => {
           <Button
             type="submit"
             className="mt-1 h-11 w-full font-medium"
-            disabled={loginPending}
+            disabled={resetPassLoading}
           >
-            {loginPending ? (
+            {resetPassLoading ? (
               <>
                 <Spinner /> Submitting
               </>
@@ -175,27 +202,8 @@ const LoginForm = () => {
           </Button>
         </FieldGroup>
       </form>
-
-      {/* Separator */}
-      <div className="my-4">
-        <FieldSeparator className="my-0">Or</FieldSeparator>
-      </div>
-
-      {/* Google Login */}
-      <GoogleLoginComponent />
-
-      {/* Register */}
-      <p className="mt-6 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{" "}
-        <a
-          href="/register"
-          className="font-medium text-primary hover:underline"
-        >
-          Create account
-        </a>
-      </p>
     </div>
   );
 };
 
-export default LoginForm;
+export default ResetPasswordForm;

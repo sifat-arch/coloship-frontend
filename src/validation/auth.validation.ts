@@ -30,3 +30,23 @@ export const registerCustomerSchema = z
     message: "Password do not match",
     path: ["confirmPassword"],
   });
+
+export const forgotPasswordSchema = z.object({
+  email: z
+    .string({ message: "Email is required" })
+    .email("Invalid email format")
+    .transform((value) => value.trim().toLowerCase()),
+});
+
+export const resetPasswordValidationSchema = z.object({
+  email: z
+    .string({ message: "Email is required" })
+    .email("Invalid email format")
+    .transform((val) => val.trim().toLowerCase()),
+  otp: z
+    .string({ message: "OTP is required" })
+    .length(6, "OTP must be exactly 6 digits"),
+  newPassword: z
+    .string({ message: "New password is required" })
+    .min(6, "Password must be at least 6 characters"),
+});
