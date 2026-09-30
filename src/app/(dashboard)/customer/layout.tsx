@@ -4,8 +4,8 @@ import React, { ReactNode } from "react";
 
 const layout = ({ children }: { children: ReactNode }) => {
   return (
-    <RoleGuard roles={["ADMIN"]}>
-      <DashboardShell role="ADMIN"> {children}</DashboardShell>
+    <RoleGuard roles={["CUSTOMER"]}>
+      <DashboardShell role="CUSTOMER"> {children}</DashboardShell>
     </RoleGuard>
   );
 };

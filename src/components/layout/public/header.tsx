@@ -3,6 +3,7 @@ import Logo from "@/assets/svg/logo";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { useGetMe, useLogout } from "@/hooks";
+import { UserRole } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
 
@@ -16,11 +17,22 @@ const Header = () => {
       name: "About-Us",
       url: "/about-us",
     },
+    {
+      name: "About-Us",
+      url: "/about-us",
+    },
   ];
+
+  const dashboardRoute: Record<UserRole, string> = {
+    ADMIN: "/admin",
+    COURIER: "/courier",
+    CUSTOMER: "/customer",
+  };
 
   const { data, isLoading } = useGetMe();
 
   const { mutate: logout, isPending: logoutLoading } = useLogout();
+  const role: UserRole = !!data?.data && data?.data.role;
 
   const queryClient = useQueryClient();
 
@@ -49,13 +61,15 @@ const Header = () => {
         <div className="flex items-center gap-1">
           <Logo />
         </div>
-        <div className="flex gap-4">
+        <nav className="flex gap-4">
           {routes.map((route) => (
             <Link key={route.name} href={route.url}>
               {route.name}
             </Link>
           ))}
-        </div>
+
+          {role && <Link href={dashboardRoute[role]}>Dashboard</Link>}
+        </nav>
 
         <div className="flex gap-2">
           <div>
