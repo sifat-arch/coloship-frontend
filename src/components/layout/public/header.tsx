@@ -57,25 +57,37 @@ const Header = () => {
           ))}
         </div>
 
-        {logoutLoading ? (
-          "Loading..."
-        ) : (
+        <div className="flex gap-2">
           <div>
-            {!isLoading && !data && (
+            {logoutLoading ? (
+              "Loading..."
+            ) : (
+              <div>
+                {!isLoading && !data && (
+                  <Button
+                    variant="outline"
+                    render={<Link href="/login">Login</Link>}
+                    nativeButton={false}
+                  ></Button>
+                )}
+
+                {!isLoading && data && (
+                  <Button variant="destructive" onClick={handleLogout}>
+                    Logout
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+          <div>
+            {!isLoading && data && (
               <Button
-                variant="outline"
-                render={<Link href="/login">Login</Link>}
+                render={<Link href={"/courier"}>Become a Courier</Link>}
                 nativeButton={false}
               ></Button>
             )}
-
-            {!isLoading && data && (
-              <Button variant="destructive" onClick={handleLogout}>
-                Logout
-              </Button>
-            )}
           </div>
-        )}
+        </div>
       </div>
     </header>
   );

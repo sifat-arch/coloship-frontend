@@ -1,4 +1,5 @@
 import {
+  applyAsCourier,
   forgotPassword,
   googleOAuth,
   resetPassword,
@@ -51,5 +52,10 @@ export const useResetPassword = () => {
 export const useGoogleOAuth = () => {
   return useMutation({
     mutationFn: googleOAuth,
+  });
+};
+export const useApplyAsCourier = () => {
+  return useMutation({
+    mutationFn: applyAsCourier,
   });
 };

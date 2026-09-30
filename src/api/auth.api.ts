@@ -1,5 +1,6 @@
 import apiClient from "@/lib/apiClient";
 import {
+  courierApplicationPayload,
   IForgotPasswordPayload,
   ILoginPayload,
   IRegisterPayload,
@@ -49,5 +50,15 @@ export const googleOAuth = (payload: { idToken: string }) => {
   return apiClient("/auth/google", {
     method: "POST",
     body: payload,
+  });
+};
+export const applyAsCourier = (payload: courierApplicationPayload) => {
+  const formData = new FormData();
+  formData.append("data", JSON.stringify(payload.data));
+  formData.append("resume", payload.resume);
+  formData.append("profileImage", payload.profileImage);
+  return apiClient("/auth/register-courier", {
+    method: "POST",
+    body: formData,
   });
 };
