@@ -10,7 +10,7 @@ export const adminRoutes = [
       },
       {
         title: "Approve Courier",
-        url: `${prefix}/payment-history`,
+        url: `${prefix}/approve-courier`,
       },
     ],
   },
