@@ -1,7 +1,7 @@
 "use client";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CourierApprovalTable from "./courier-approval-table";
-import { Suspense, useState } from "react";
+import { ChangeEvent, Suspense, useState } from "react";
 import CourierApprovalTableSkeleton from "./courier-approval-tabil-skaliton";
 
 import { Input } from "@/components/ui/input";
@@ -22,11 +22,16 @@ const CourierApprovalTabs = () => {
   const [tab, setTeb] = useState<"ALL" | CourierVerificationStatus>("ALL");
   const [selectedId, setSelectedId] = useState("");
   const [searchInput, setSearchInput] = useState("");
+  const [page, setPage] = useState(1);
 
+  const handleSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    setSearchInput(e.target.value);
+    setPage(1);
+  };
   const debounceSearch = useDebounce(searchInput);
 
   const queryParams: CourierParams = {
-    page: 1,
+    page,
     limit: 10,
     ...(tab === "ALL" ? {} : { verificationStatus: tab }),
     ...(debounceSearch ? { searchTerm: debounceSearch } : {}),
@@ -40,7 +45,7 @@ const CourierApprovalTabs = () => {
             type="search"
             placeholder="Search by name or email"
             value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            onChange={(e) => handleSearch(e)}
           />
         </div>
 
@@ -55,8 +60,13 @@ const CourierApprovalTabs = () => {
         </Tabs>
       </div>
       <Suspense fallback={<CourierApprovalTableSkeleton />}>
-        <CourierApprovalTable {...queryParams} handleReview={setSelectedId} />
+        <CourierApprovalTable
+          {...queryParams}
+          handleReview={setSelectedId}
+          handlePageChange={setPage}
+        />
       </Suspense>
+
       <CourierApprovalSheet
         selectedId={selectedId}
         onClose={() => setSelectedId("")}
