@@ -10,6 +10,7 @@ import {
   CourierVerificationStatus,
 } from "@/types/courier.status";
 import CourierApprovalSheet from "./courier-approval-sheet";
+import { useDebounce } from "@/hooks/debounce.hook";
 
 const CourierApprovalTabs = () => {
   const verificationStatus: ["ALL" | CourierVerificationStatus, string][] = [
@@ -20,18 +21,27 @@ const CourierApprovalTabs = () => {
   ];
   const [tab, setTeb] = useState<"ALL" | CourierVerificationStatus>("ALL");
   const [selectedId, setSelectedId] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+
+  const debounceSearch = useDebounce(searchInput);
 
   const queryParams: CourierParams = {
     page: 1,
     limit: 10,
     ...(tab === "ALL" ? {} : { verificationStatus: tab }),
+    ...(debounceSearch ? { searchTerm: debounceSearch } : {}),
   };
 
   return (
     <>
       <div className="flex justify-between mb-4">
         <div>
-          <Input type="search" placeholder="Search by name or email" />
+          <Input
+            type="search"
+            placeholder="Search by name or email"
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+          />
         </div>
 
         <Tabs value={tab} onValueChange={(value) => setTeb(value)}>
