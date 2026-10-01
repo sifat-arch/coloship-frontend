@@ -9,6 +9,7 @@ import {
   CourierParams,
   CourierVerificationStatus,
 } from "@/types/courier.status";
+import CourierApprovalSheet from "./courier-approval-sheet";
 
 const CourierApprovalTabs = () => {
   const verificationStatus: ["ALL" | CourierVerificationStatus, string][] = [
@@ -18,11 +19,12 @@ const CourierApprovalTabs = () => {
     ["ALL", "All"],
   ];
   const [tab, setTeb] = useState<"ALL" | CourierVerificationStatus>("ALL");
+  const [selectedId, setSelectedId] = useState("");
 
   const queryParams: CourierParams = {
     page: 1,
     limit: 10,
-    ...(tab === "ALL" ? {} : {verificationStatus:tab}),
+    ...(tab === "ALL" ? {} : { verificationStatus: tab }),
   };
 
   return (
@@ -43,8 +45,13 @@ const CourierApprovalTabs = () => {
         </Tabs>
       </div>
       <Suspense fallback={<CourierApprovalTableSkeleton />}>
-        <CourierApprovalTable {...queryParams} />
+        <CourierApprovalTable {...queryParams} handleReview={setSelectedId} />
       </Suspense>
+      <CourierApprovalSheet
+        selectedId={selectedId}
+        onClose={() => setSelectedId("")}
+        {...queryParams}
+      />
     </>
   );
 };

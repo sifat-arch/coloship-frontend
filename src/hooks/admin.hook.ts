@@ -1,6 +1,11 @@
-import { getAllCouriers } from "@/api/admin.api";
+import { approveCourier, getAllCouriers, rejectCourier } from "@/api/admin.api";
 import { CourierParams } from "@/types/courier.status";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 
 export const useGetAllCouriers = (params: CourierParams) => {
   return useQuery({
@@ -12,5 +17,24 @@ export const useSuspenseAllCouriers = (params: CourierParams) => {
   return useSuspenseQuery({
     queryKey: ["courier", params],
     queryFn: () => getAllCouriers(params),
+  });
+};
+
+export const useAcceptCourier = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => approveCourier(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courier"] });
+    },
+  });
+};
+export const useRejectCourier = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => rejectCourier(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["courier"] });
+    },
   });
 };

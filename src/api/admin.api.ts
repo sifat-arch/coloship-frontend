@@ -7,3 +7,19 @@ export const getAllCouriers = (params: CourierParams) => {
     params,
   });
 };
+export const approveCourier = (id: string) => {
+  return apiClient<apiResponse<CourierProfileList>>(
+    `/admin/couriers/${id}/approve`,
+    {
+      method: "PATCH",
+    },
+  );
+};
+export const rejectCourier = (id: string) => {
+  return apiClient<apiResponse<CourierProfileList>>(
+    `/admin/couriers/${id}/reject`,
+    {
+      method: "PATCH",
+    },
+  );
+};

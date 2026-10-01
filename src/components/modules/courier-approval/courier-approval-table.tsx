@@ -11,12 +11,15 @@ import {
 } from "@/components/ui/table";
 
 import CourierApprovalSheet from "./courier-approval-sheet";
-import { useGetAllCouriers, useSuspenseAllCouriers } from "@/hooks/admin.hook";
+import { useSuspenseAllCouriers } from "@/hooks/admin.hook";
 import { CourierParams } from "@/types/courier.status";
+import { Dispatch, SetStateAction } from "react";
 
-interface Props extends CourierParams {}
+interface Props extends CourierParams {
+  handleReview: Dispatch<SetStateAction<string>>;
+}
 
-const CourierApprovalTable = ({ ...params }: Props) => {
+const CourierApprovalTable = ({ handleReview, ...params }: Props) => {
   const { data } = useSuspenseAllCouriers(params);
   const couriers = data?.data || [];
 
@@ -44,7 +47,12 @@ const CourierApprovalTable = ({ ...params }: Props) => {
               <TableCell> {courier.vehicleType} </TableCell>
 
               <TableCell className="text-right">
-                <CourierApprovalSheet />
+                <Button
+                  variant="outline"
+                  onClick={() => handleReview(courier.id)}
+                >
+                  Review
+                </Button>
               </TableCell>
             </TableRow>
           ))}
