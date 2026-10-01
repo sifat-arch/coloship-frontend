@@ -1,7 +1,9 @@
 import apiClient from "@/lib/apiClient";
 import { apiResponse } from "@/types";
-import { CourierProfileList } from "@/types/courier.status";
+import { CourierParams, CourierProfileList } from "@/types/courier.status";
 
-export const getAllCouriers = () => {
-  return apiClient<apiResponse<CourierProfileList>>("/admin/all-couriers");
+export const getAllCouriers = (params: CourierParams) => {
+  return apiClient<apiResponse<CourierProfileList>>("/admin/all-couriers", {
+    params,
+  });
 };

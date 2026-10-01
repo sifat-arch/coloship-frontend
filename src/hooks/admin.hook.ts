@@ -1,15 +1,16 @@
 import { getAllCouriers } from "@/api/admin.api";
+import { CourierParams } from "@/types/courier.status";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 
-export const useGetAllCouriers = () => {
+export const useGetAllCouriers = (params: CourierParams) => {
   return useQuery({
-    queryKey: ["courier"],
-    queryFn: getAllCouriers,
+    queryKey: ["courier", params],
+    queryFn: () => getAllCouriers(params),
   });
 };
-export const useSuspenseAllCouriers = () => {
+export const useSuspenseAllCouriers = (params: CourierParams) => {
   return useSuspenseQuery({
-    queryKey: ["courier"],
-    queryFn: getAllCouriers,
+    queryKey: ["courier", params],
+    queryFn: () => getAllCouriers(params),
   });
 };

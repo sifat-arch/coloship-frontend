@@ -11,3 +11,5 @@ export type courierApplicationPayload = {
   resume: File;
   profileImage: File;
 };
+
+

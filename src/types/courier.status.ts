@@ -1,3 +1,5 @@
+export type CourierVerificationStatus = "PENDING" | "APPROVED" | "REJECTED";
+
 export interface UserInfo {
   id: string;
   name: string;
@@ -22,7 +24,7 @@ export interface CourierProfile {
   resume: string;
   resumePublicId: string;
   role: "COURIER" | string;
-  status: "PENDING" | "ACTIVE" | "REJECTED" | "SUSPENDED" | string;
+  VerificationStatus: CourierVerificationStatus;
   updatedAt: string;
   user: UserInfo;
   userId: string;
@@ -31,3 +33,10 @@ export interface CourierProfile {
 }
 
 export type CourierProfileList = CourierProfile[];
+
+export interface CourierParams {
+  verificationStatus?: string;
+  page?: number;
+  limit?: number;
+  searchTerm?: string;
+}

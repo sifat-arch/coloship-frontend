@@ -12,9 +12,12 @@ import {
 
 import CourierApprovalSheet from "./courier-approval-sheet";
 import { useGetAllCouriers, useSuspenseAllCouriers } from "@/hooks/admin.hook";
+import { CourierParams } from "@/types/courier.status";
 
-const CourierApprovalTable = () => {
-  const { data } = useSuspenseAllCouriers();
+interface Props extends CourierParams {}
+
+const CourierApprovalTable = ({ ...params }: Props) => {
+  const { data } = useSuspenseAllCouriers(params);
   const couriers = data?.data || [];
 
   return (
