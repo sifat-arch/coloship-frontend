@@ -14,11 +14,7 @@ const Header = () => {
       url: "/",
     },
     {
-      name: "About-Us",
-      url: "/about-us",
-    },
-    {
-      name: "About-Us",
+      name: "About Us",
       url: "/about-us",
     },
   ];
@@ -63,7 +59,7 @@ const Header = () => {
         </div>
         <nav className="flex gap-4">
           {routes.map((route) => (
-            <Link key={route.name} href={route.url}>
+            <Link key={route.url} href={route.url}>
               {route.name}
             </Link>
           ))}
