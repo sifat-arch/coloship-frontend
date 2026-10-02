@@ -91,9 +91,9 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
 
   return (
     <Sheet open={!!selectedId} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto flex flex-col justify-between">
+      <SheetContent className="w-full sm:max-w-xl overflow-y-auto flex flex-col justify-between p-6">
         <div>
-          <SheetHeader className="pb-4 border-b">
+          <SheetHeader className="p-0 pb-4 border-b">
             <SheetTitle className="text-xl font-bold">
               Courier Profile Review
             </SheetTitle>
@@ -103,7 +103,7 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
           </SheetHeader>
 
           {/* Courier Details Content */}
-          <div className="py-6 space-y-6 p-3">
+          <div className="py-6 space-y-6">
             {/* Top Profile Card */}
             <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl border">
               <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100 border">
@@ -234,7 +234,7 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
         </div>
 
         {/* Footer Action Buttons */}
-        <SheetFooter className="pt-4 border-t mt-auto">
+        <SheetFooter className="p-0 pt-4 border-t mt-auto">
           <div className="flex gap-3 w-full">
             <Button
               variant="default"

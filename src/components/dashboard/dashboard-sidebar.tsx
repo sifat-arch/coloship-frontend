@@ -32,8 +32,8 @@ export function DashboardSidebar({ role }: { role: UserRole }) {
 
   return (
     <Sidebar>
-      <SidebarHeader>
-        <Link href="/">
+      <SidebarHeader className="p-3 border-b">
+        <Link href="/" className="flex items-center gap-2.5">
           <Logo />
         </Link>
       </SidebarHeader>
