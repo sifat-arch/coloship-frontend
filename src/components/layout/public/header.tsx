@@ -90,9 +90,9 @@ const Header = () => {
             )}
           </div>
           <div>
-            {!isLoading && data && (
+            {!isLoading && role === "CUSTOMER" && (
               <Button
-                render={<Link href={"/courier"}>Become a Courier</Link>}
+                render={<Link href="/courier-apply">Become a Courier</Link>}
                 nativeButton={false}
               ></Button>
             )}

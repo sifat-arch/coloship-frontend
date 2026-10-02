@@ -10,8 +10,12 @@ export const courierRoutes = [
         url: `${prefix}`,
       },
       {
-        title: "Approve Courier",
-        url: `${prefix}/is-available`,
+        title: "My Deliveries",
+        url: `${prefix}/tasks`,
+      },
+      {
+        title: "Profile",
+        url: `${prefix}/profile`,
       },
     ],
   },
