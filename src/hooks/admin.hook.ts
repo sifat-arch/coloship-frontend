@@ -1,5 +1,6 @@
-import { approveCourier, getAllCouriers, rejectCourier } from "@/api/admin.api";
+import { approveCourier, assignCourierToShipment, getAllCouriers, getAllShipments, getAvailableCouriers, rejectCourier, unassignCourierFromShipment } from "@/api/admin.api";
 import { CourierParams } from "@/types/courier.status";
+import { ShipmentParams } from "@/types/shipment.type";
 import {
   useMutation,
   useQuery,
@@ -35,6 +36,57 @@ export const useRejectCourier = () => {
     mutationFn: (id: string) => rejectCourier(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["courier"] });
+    },
+  });
+};
+
+// ১. রেগুলার কুয়েরি ও সাসপেন্স কুয়েরি
+export const useGetAllShipments = (params: ShipmentParams) => {
+  return useQuery({
+    queryKey: ["shipments", params],
+    queryFn: () => getAllShipments(params),
+  });
+};
+
+export const useSuspenseAllShipments = (params: ShipmentParams) => {
+  return useSuspenseQuery({
+    queryKey: ["shipments", params],
+    queryFn: () => getAllShipments(params),
+  });
+};
+
+// ২. অ্যাভেইলেবল কুরিয়ার কুয়েরি
+export const useGetAvailableCouriers = () => {
+  return useQuery({
+    queryKey: ["available-couriers"],
+    queryFn: () => getAvailableCouriers(),
+  });
+};
+
+// ৩. কুরিয়ার অ্যাসাইন মিউটেশন
+export const useAssignCourier = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      shipmentId,
+      courierProfileId,
+    }: {
+      shipmentId: string;
+      courierProfileId: string;
+    }) => assignCourierToShipment(shipmentId, courierProfileId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shipments"] });
+    },
+  });
+};
+
+// ৪. কুরিয়ার আন-অ্যাসাইন মিউটেশন
+export const useUnassignCourier = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (shipmentId: string) => unassignCourierFromShipment(shipmentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shipments"] });
     },
   });
 };

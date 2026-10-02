@@ -12,6 +12,10 @@ export const adminRoutes = [
         title: "Approve Courier",
         url: `${prefix}/approve-courier`,
       },
+      {
+        title: "Shipments",
+        url: `${prefix}/shipments`,
+      },
     ],
   },
   {

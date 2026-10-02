@@ -9,24 +9,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { useSuspenseAllCouriers } from "@/hooks/admin.hook";
-import { CourierParams } from "@/types/courier.status";
+import { ShipmentParams } from "@/types/shipment.type";
 import { Dispatch, SetStateAction } from "react";
 import TablePagination from "@/components/ui/table-pagination";
 import { FolderSearch } from "lucide-react";
+import { useSuspenseAllShipments } from "@/hooks/admin.hook";
 
-interface Props extends CourierParams {
+interface Props extends ShipmentParams {
   handleReview: Dispatch<SetStateAction<string>>;
   handlePageChange: Dispatch<SetStateAction<number>>;
 }
 
-const CourierApprovalTable = ({
+const ShipmentTable = ({
   handleReview,
   handlePageChange,
   ...params
 }: Props) => {
-  const { data } = useSuspenseAllCouriers(params);
-  const couriers = data?.data || [];
+  const { data } = useSuspenseAllShipments(params);
+  const shipments = data?.data || [];
 
   return (
     <>
@@ -34,31 +34,31 @@ const CourierApprovalTable = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>License No.</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Contact No.</TableHead>
-              <TableHead>Vehicle Type</TableHead>
+              <TableHead>Tracking No</TableHead>
+              <TableHead>Customer</TableHead>
+              <TableHead>Route</TableHead>
+              <TableHead>Assigned Courier</TableHead>
+              <TableHead>Status </TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {couriers.length > 0 ? (
-              couriers.map((courier) => (
-                <TableRow key={courier.id}>
+            {shipments.length > 0 ? (
+              shipments.map((shipment) => (
+                <TableRow key={shipment.id}>
                   <TableCell className="font-medium">
                     {" "}
-                    {courier.user.name}{" "}
+                    {shipment.trackingNumber}{" "}
                   </TableCell>
-                  <TableCell> {courier.licenseNumber} </TableCell>
-                  <TableCell>{courier.user.email} </TableCell>
-                  <TableCell> {courier.phone} </TableCell>
-                  <TableCell> {courier.vehicleType} </TableCell>
+                  <TableCell> {shipment.customer.name} </TableCell>
+                  <TableCell>{shipment.pickupAddress.addressLine} </TableCell>
+                  <TableCell> {shipment.courier?.user.name} </TableCell>
+                  <TableCell> {shipment.status} </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handleReview(courier.id)}
+                      onClick={() => handleReview(shipment.id)}
                     >
                       Review
                     </Button>
@@ -74,10 +74,10 @@ const CourierApprovalTable = ({
                     </div>
                     <div className="space-y-1">
                       <h4 className="text-base font-semibold">
-                        No couriers found
+                        No shipments found
                       </h4>
                       <p className="text-sm text-muted-foreground">
-                        There are no courier requests available at the moment.
+                        There are no shipments available for the selected filter.
                       </p>
                     </div>
                   </div>
@@ -88,7 +88,7 @@ const CourierApprovalTable = ({
         </Table>
       </div>
 
-      {couriers.length > 0 && (
+      {shipments.length > 0 && (
         <div className="my-5">
           <TablePagination
             page={params.page ?? 1}
@@ -101,4 +101,4 @@ const CourierApprovalTable = ({
   );
 };
 
-export default CourierApprovalTable;
+export default ShipmentTable;

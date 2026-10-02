@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const CourierApprovalTableSkeleton = () => {
+const ShipmentTableSkeleton = () => {
   const skeletonRows = Array.from({ length: 5 });
 
   return (
@@ -56,4 +56,4 @@ const CourierApprovalTableSkeleton = () => {
   );
 };
 
-export default CourierApprovalTableSkeleton;
+export default ShipmentTableSkeleton;
