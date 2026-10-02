@@ -1,6 +1,17 @@
-import { approveCourier, assignCourierToShipment, getAllCouriers, getAllShipments, getAvailableCouriers, rejectCourier, unassignCourierFromShipment } from "@/api/admin.api";
+import {
+  approveCourier,
+  assignCourierToShipment,
+  getAllCouriers,
+  getAllShipments,
+  getAllUsers,
+  getAvailableCouriers,
+  rejectCourier,
+  unassignCourierFromShipment,
+  updateUserStatus,
+} from "@/api/admin.api";
 import { CourierParams } from "@/types/courier.status";
 import { ShipmentParams } from "@/types/shipment.type";
+import { UserParams, UserStatus } from "@/types/user.type";
 import {
   useMutation,
   useQuery,
@@ -87,6 +98,38 @@ export const useUnassignCourier = () => {
     mutationFn: (shipmentId: string) => unassignCourierFromShipment(shipmentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shipments"] });
+    },
+  });
+};
+
+// ৫. ইউজার ফেচিং কুয়েরি ও সাসপেন্স কুয়েরি
+export const useGetAllUsers = (params: UserParams) => {
+  return useQuery({
+    queryKey: ["users", params],
+    queryFn: () => getAllUsers(params),
+  });
+};
+
+export const useSuspenseAllUsers = (params: UserParams) => {
+  return useSuspenseQuery({
+    queryKey: ["users", params],
+    queryFn: () => getAllUsers(params),
+  });
+};
+
+// ৬. ইউজার স্ট্যাটাস পরিবর্তন মিউটেশন
+export const useUpdateUserStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      userId,
+      status,
+    }: {
+      userId: string;
+      status: UserStatus;
+    }) => updateUserStatus(userId, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
     },
   });
 };
