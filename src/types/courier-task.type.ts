@@ -1,5 +1,15 @@
 import { AddressInfo, ShipmentStatus } from "./shipment.type";
 
+export interface TrackingEventItem {
+  id: string;
+  shipmentId: string;
+  status: ShipmentStatus;
+  description: string;
+  location?: string | null;
+  createdBy?: string | null;
+  createdAt: string;
+}
+
 export interface CourierTaskItem {
   id: string;
   trackingNumber: string;
@@ -20,6 +30,7 @@ export interface CourierTaskItem {
   };
   pickupAddress: AddressInfo;
   deliveryAddress: AddressInfo;
+  trackingEvents?: TrackingEventItem[];
   payment?: {
     id: string;
     status: string;

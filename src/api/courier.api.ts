@@ -16,6 +16,16 @@ export const getMyAssignments = (status?: string) => {
   });
 };
 
+// ১.১ নির্দিষ্ট একটি কাজের বিস্তারিত আনা
+export const getSingleAssignment = (taskId: string) => {
+  return apiClient<apiResponse<CourierTaskItem>>(
+    `/courier/assignments/${taskId}`,
+    {
+      method: "GET",
+    },
+  );
+};
+
 // ২. কাজের দায়িত্ব গ্রহণ (ACCEPT) বা বর্জন (REJECT) করা
 export const respondToAssignment = (
   taskId: string,

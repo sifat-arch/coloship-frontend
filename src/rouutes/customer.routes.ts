@@ -3,30 +3,35 @@ const prefix = "/customer";
 export const customerRoutes = [
   {
     title: "Management",
-
     items: [
       {
         title: "Overview",
         url: `${prefix}`,
       },
       {
-        title: "Track",
-        url: `${prefix}`,
+        title: "Book a Parcel",
+        url: `${prefix}/book-parcel`,
+      },
+      {
+        title: "My Shipments",
+        url: `${prefix}/shipments`,
+      },
+      {
+        title: "Track Parcel",
+        url: `${prefix}/track`,
       },
     ],
   },
   {
-    title: "App Settings",
-
+    title: "Account",
     items: [
       {
-        title: "Routing",
-        url: "#",
+        title: "Saved Addresses",
+        url: `${prefix}/addresses`,
       },
       {
-        title: "Data Fetching",
-        url: "#",
-        isActive: true,
+        title: "Profile",
+        url: `${prefix}/profile`,
       },
     ],
   },

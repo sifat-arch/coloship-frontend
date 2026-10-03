@@ -22,6 +22,7 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
+import ProfileImageUploader from "@/components/modules/profile/profile-image-uploader";
 
 const CourierProfileView = () => {
   const { data, isLoading } = useGetCourierProfile();
@@ -102,17 +103,11 @@ const CourierProfileView = () => {
       {/* 1. Hero Profile Banner */}
       <div className="p-6 md:p-8 rounded-2xl border bg-card shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-5">
-          <div className="w-20 h-20 rounded-2xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center font-bold text-2xl text-primary overflow-hidden">
-            {profile.profileImageUrl ? (
-              <img
-                src={profile.profileImageUrl}
-                alt={profile.user?.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              profile.user?.name?.charAt(0).toUpperCase()
-            )}
-          </div>
+          <ProfileImageUploader
+            currentImageUrl={profile.user?.imageUrl || profile.profileImageUrl}
+            fallbackName={profile.user?.name}
+            size="md"
+          />
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <h2 className="text-xl md:text-2xl font-bold tracking-tight capitalize">

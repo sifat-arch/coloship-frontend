@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { toast } from "@/components/ui/toast";
 import {
+  useGetCourierAssignment,
   useGetMyAssignments,
   useRespondAssignment,
   useUpdateTaskStatus,
@@ -24,11 +25,17 @@ import {
   DollarSign,
   Weight,
   CheckCircle,
+  CheckCircle2,
   XCircle,
   Truck,
   AlertTriangle,
   Navigation,
+  Loader2,
+  Clock,
+  History,
+  FileText,
 } from "lucide-react";
+import { TrackingEventItem } from "@/types/courier-task.type";
 
 interface Props {
   selectedId: string | null;
@@ -37,27 +44,32 @@ interface Props {
 }
 
 const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
-  const { data } = useGetMyAssignments(status);
-  const selectedTask = data?.data?.find((task) => task.id === selectedId);
+  // 1. Fetch targeted single assignment data (fallback to list query)
+  const { data: singleData, isLoading: singleLoading } = useGetCourierAssignment(selectedId);
+  const { data: listData } = useGetMyAssignments(status);
 
-  const { mutate: respondTask, isPending: respondPending } =
-    useRespondAssignment();
-  const { mutate: updateStatus, isPending: updatePending } =
-    useUpdateTaskStatus();
+  const selectedTask = singleData?.data || listData?.data?.find((t) => t.id === selectedId);
 
-  // Rejection reason state
+  // 2. Mutation hooks
+  const { mutate: respondTask, isPending: respondPending } = useRespondAssignment();
+  const { mutate: updateStatus, isPending: updatePending } = useUpdateTaskStatus();
+
+  // 3. Local interaction states
   const [showRejectInput, setShowRejectInput] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
 
-  // Delivery progress location and note state
+  const [showFailureInput, setShowFailureInput] = useState(false);
+  const [failureReason, setFailureReason] = useState("");
+
   const [currentLocation, setCurrentLocation] = useState("");
   const [deliveryNote, setDeliveryNote] = useState("");
+  const [showTrackingHistory, setShowTrackingHistory] = useState(false);
 
-  if (!selectedTask) {
+  if (!selectedId) {
     return null;
   }
 
-  // ১. কাজ গ্রহণ (ACCEPT)
+  // 1. কাজ গ্রহণ (ACCEPT)
   const handleAccept = () => {
     if (!selectedId) return;
 
@@ -68,7 +80,8 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
           if (res?.success) {
             toast.add({
               title: "Task Accepted",
-              description: "You have successfully accepted this delivery task.",
+              description: "You have accepted this delivery task. Please proceed to parcel pickup.",
+              type: "success",
             });
             onClose();
           }
@@ -76,7 +89,8 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
         onError: (err: any) => {
           toast.add({
             title: "Action Failed",
-            description: err?.message || "Failed to accept task.",
+            description: err?.data?.message || err?.message || "Failed to accept task.",
+            type: "error",
           });
         },
       },
@@ -87,17 +101,20 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
   const handleReject = () => {
     if (!selectedId) return;
 
+    const reasonToSend = rejectReason.trim() || "Courier unavailable for route";
+
     respondTask(
       {
         taskId: selectedId,
-        payload: { action: "REJECT", reason: rejectReason || "Courier unavailable" },
+        payload: { action: "REJECT", reason: reasonToSend },
       },
       {
         onSuccess: (res) => {
           if (res?.success) {
             toast.add({
               title: "Task Rejected",
-              description: "Task returned to system for reassignment.",
+              description: "Task returned to system for administrative reassignment.",
+              type: "success",
             });
             setShowRejectInput(false);
             setRejectReason("");
@@ -106,334 +123,724 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
         },
         onError: (err: any) => {
           toast.add({
-            title: "Action Failed",
-            description: err?.message || "Failed to reject task.",
+            title: "Rejection Failed",
+            description: err?.data?.message || err?.message || "Failed to reject task.",
+            type: "error",
           });
         },
       },
     );
   };
 
-  // ৩. ডেলিভারি স্ট্যাটাস আপডেট (PICKED_UP / OUT_FOR_DELIVERY / DELIVERED ইত্যাদি)
+  // ৩. ডেলিভারি প্রগ্রেস ও স্ট্যাটাস আপডেট
   const handleStatusUpdate = (
     nextStatus: "PICKED_UP" | "IN_TRANSIT" | "OUT_FOR_DELIVERY" | "DELIVERED" | "DELIVERY_FAILED",
+    customNote?: string,
   ) => {
     if (!selectedId) return;
+
+    const noteToSend = customNote || deliveryNote.trim() || undefined;
+    const locationToSend = currentLocation.trim() || undefined;
 
     updateStatus(
       {
         taskId: selectedId,
         payload: {
           status: nextStatus,
-          location: currentLocation || undefined,
-          note: deliveryNote || undefined,
+          location: locationToSend,
+          note: noteToSend,
         },
       },
       {
         onSuccess: (res) => {
           if (res?.success) {
+            const statusLabel = nextStatus.replace(/_/g, " ");
             toast.add({
               title: "Status Updated",
-              description: `Shipment marked as ${nextStatus.replace(/_/g, " ")}.`,
+              description: `Shipment is now marked as ${statusLabel}.`,
+              type: "success",
             });
             setCurrentLocation("");
             setDeliveryNote("");
+            setShowFailureInput(false);
+            setFailureReason("");
             onClose();
           }
         },
         onError: (err: any) => {
           toast.add({
             title: "Update Failed",
-            description: err?.message || "Failed to update delivery status.",
+            description: err?.data?.message || err?.message || "Failed to update delivery status.",
+            type: "error",
           });
         },
       },
     );
   };
 
-  const isPendingAction = selectedTask.status === "COURIER_ASSIGNED";
-  const isDelivered = selectedTask.status === "DELIVERED";
-  const isCancelled =
-    selectedTask.status === "CANCELLED" ||
-    selectedTask.status === "DELIVERY_FAILED";
+  // Check if accepted previously based on tracking events
+  const isAccepted = Boolean(
+    selectedTask?.trackingEvents?.some(
+      (e) =>
+        e.description?.toLowerCase().includes("task accepted") ||
+        e.description?.toLowerCase().includes("accepted by courier"),
+    ),
+  );
+
+  const isDelivered = selectedTask?.status === "DELIVERED";
+  const isDeliveryFailed = selectedTask?.status === "DELIVERY_FAILED";
+  const isCancelled = selectedTask?.status === "CANCELLED" || selectedTask?.status === "RETURNED";
+  const isTerminal = isDelivered || isDeliveryFailed || isCancelled;
+
+  // Failure event if any
+  const latestFailureEvent = selectedTask?.trackingEvents?.find(
+    (e) => e.status === "DELIVERY_FAILED",
+  );
 
   return (
-    <Sheet open={!!selectedId} onOpenChange={onClose}>
+    <Sheet open={Boolean(selectedId)} onOpenChange={onClose}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto flex flex-col justify-between p-6">
-        <div className="space-y-6">
-          <SheetHeader className="p-0 pb-4 border-b">
-            <div className="flex items-center gap-2">
-              <Package className="w-5 h-5 text-primary" />
-              <SheetTitle className="text-xl font-bold">
-                Delivery Task
-              </SheetTitle>
-            </div>
-            <SheetDescription>
-              Tracking ID:{" "}
-              <span className="font-semibold text-foreground">
-                #{selectedTask.trackingNumber}
-              </span>
-            </SheetDescription>
-          </SheetHeader>
-
-          {/* Status & Service Badge */}
-          <div className="flex items-center justify-between p-3.5 bg-muted/40 rounded-lg border">
-            <div>
-              <p className="text-xs text-muted-foreground font-medium">Status</p>
-              <span className="inline-block mt-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-primary/10 text-primary">
-                {selectedTask.status.replace(/_/g, " ")}
-              </span>
-            </div>
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground font-medium">Delivery Type</p>
-              <span className="text-sm font-semibold capitalize">
-                {selectedTask.deliveryType.toLowerCase()}
-              </span>
-            </div>
+        {singleLoading && !selectedTask ? (
+          <div className="flex flex-col items-center justify-center h-96 space-y-3">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">Loading task details...</p>
           </div>
+        ) : !selectedTask ? (
+          <div className="flex flex-col items-center justify-center h-96 space-y-3">
+            <Package className="w-10 h-10 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Task not found or no longer assigned.</p>
+            <Button variant="outline" size="sm" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Header */}
+            <SheetHeader className="p-0 pb-4 border-b">
+              <div className="flex items-center gap-2">
+                <Package className="w-5 h-5 text-primary" />
+                <SheetTitle className="text-xl font-bold">
+                  Delivery Task Details
+                </SheetTitle>
+              </div>
+              <SheetDescription>
+                Tracking ID:{" "}
+                <span className="font-mono font-bold text-foreground">
+                  #{selectedTask.trackingNumber}
+                </span>
+              </SheetDescription>
+            </SheetHeader>
 
-          {/* COD Cash Alert */}
-          {Number(selectedTask.codAmount) > 0 && (
-            <div className="p-3.5 rounded-xl border border-amber-300 bg-amber-50 text-amber-900 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <DollarSign className="w-5 h-5 text-amber-700" />
-                <div>
-                  <p className="text-xs font-semibold">Collect Cash On Delivery</p>
-                  <p className="text-sm font-bold">৳{selectedTask.codAmount}</p>
+            {/* Status & Priority Badge */}
+            <div className="flex items-center justify-between p-3.5 bg-muted/40 rounded-xl border">
+              <div>
+                <p className="text-xs text-muted-foreground font-medium">Current Status</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span
+                    className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${
+                      selectedTask.status === "DELIVERED"
+                        ? "bg-green-100 text-green-700 border-green-200"
+                        : selectedTask.status === "DELIVERY_FAILED"
+                          ? "bg-red-100 text-red-700 border-red-200"
+                          : selectedTask.status === "OUT_FOR_DELIVERY"
+                            ? "bg-indigo-100 text-indigo-700 border-indigo-200"
+                            : selectedTask.status === "IN_TRANSIT"
+                              ? "bg-purple-100 text-purple-700 border-purple-200"
+                              : selectedTask.status === "PICKED_UP"
+                                ? "bg-blue-100 text-blue-700 border-blue-200"
+                                : "bg-amber-100 text-amber-700 border-amber-200"
+                    }`}
+                  >
+                    {selectedTask.status.replace(/_/g, " ")}
+                  </span>
+                  {selectedTask.status === "COURIER_ASSIGNED" && isAccepted && (
+                    <span className="px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                      Accepted
+                    </span>
+                  )}
                 </div>
               </div>
-              <span className="text-xs font-medium px-2 py-1 bg-amber-200 rounded">
-                Cash Collection
-              </span>
-            </div>
-          )}
 
-          {/* Customer Contact */}
-          <div className="p-4 rounded-xl border bg-card space-y-3">
-            <div className="flex items-center justify-between border-b pb-2">
-              <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-                <User className="w-4 h-4" /> Customer Contact
-              </div>
-              {selectedTask.customer?.name && (
-                <span className="text-xs font-medium text-foreground">
-                  {selectedTask.customer.name}
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground font-medium">Delivery Service</p>
+                <span className="text-sm font-semibold capitalize flex items-center justify-end gap-1 mt-0.5">
+                  {selectedTask.deliveryType === "EXPRESS" ? (
+                    <span className="text-amber-600 font-bold">⚡ Express</span>
+                  ) : (
+                    "Standard"
+                  )}
                 </span>
+              </div>
+            </div>
+
+            {/* Status Specific Operational Banners */}
+            {selectedTask.status === "COURIER_ASSIGNED" && !isAccepted && (
+              <div className="p-3.5 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
+                <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Action Required: New Delivery Request</p>
+                  <p className="mt-0.5 text-amber-700 dark:text-amber-300">
+                    Review the route and parcel specifications below. Accept to commit or reject to return to admin dispatcher.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedTask.status === "COURIER_ASSIGNED" && isAccepted && (
+              <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 text-xs flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Task Accepted</p>
+                  <p className="mt-0.5 text-blue-700 dark:text-blue-300">
+                    You have accepted this delivery task. Proceed to pickup location and mark as picked up when parcel is received.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedTask.status === "PICKED_UP" && (
+              <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/70 text-blue-900 dark:text-blue-200 text-xs flex items-start gap-2.5">
+                <Truck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Parcel Collected from Sender</p>
+                  <p className="mt-0.5 text-blue-700 dark:text-blue-300">
+                    {selectedTask.pickedUpAt
+                      ? `Collected at ${new Date(selectedTask.pickedUpAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. `
+                      : ""}
+                    Start transit when ready to move towards destination.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedTask.status === "IN_TRANSIT" && (
+              <div className="p-3.5 rounded-xl border border-purple-200 bg-purple-50/70 text-purple-900 dark:text-purple-200 text-xs flex items-start gap-2.5">
+                <Navigation className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Parcel In Transit</p>
+                  <p className="mt-0.5 text-purple-700 dark:text-purple-300">
+                    Parcel is moving along the delivery corridor. Mark Out for Delivery when starting last-mile doorstep dispatch.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {selectedTask.status === "OUT_FOR_DELIVERY" && (
+              <div className="p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-900 dark:text-indigo-200 text-xs flex items-start gap-2.5">
+                <Navigation className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Out for Final Delivery</p>
+                  <p className="mt-0.5 text-indigo-700 dark:text-indigo-300">
+                    Recipient is expecting delivery. Contact recipient before arrival and collect cash if COD applies.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isDelivered && (
+              <div className="p-3.5 rounded-xl border border-green-200 bg-green-50 text-green-900 text-xs flex items-start gap-2.5">
+                <CheckCircle2 className="w-4 h-4 text-green-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Delivery Successfully Completed</p>
+                  <p className="mt-0.5 text-green-700">
+                    Delivered on{" "}
+                    {selectedTask.deliveredAt
+                      ? new Date(selectedTask.deliveredAt).toLocaleString()
+                      : new Date(selectedTask.updatedAt).toLocaleString()}
+                    .
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isDeliveryFailed && (
+              <div className="p-3.5 rounded-xl border border-red-200 bg-red-50 text-red-900 text-xs flex items-start gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Delivery Attempt Failed</p>
+                  <p className="mt-0.5 text-red-700">
+                    {latestFailureEvent?.description || "Recipient was unavailable or delivery could not be completed."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {isCancelled && (
+              <div className="p-3.5 rounded-xl border border-gray-300 bg-gray-50 text-gray-800 text-xs flex items-start gap-2.5">
+                <XCircle className="w-4 h-4 text-gray-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Shipment Cancelled</p>
+                  <p className="mt-0.5 text-gray-600">
+                    This shipment was cancelled by the customer or dispatcher. No further delivery actions required.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* COD Cash Collection Alert */}
+            {Number(selectedTask.codAmount) > 0 && (
+              <div className="p-4 rounded-xl border border-amber-300 bg-amber-50/90 text-amber-900 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-amber-200 rounded-lg text-amber-900">
+                    <DollarSign className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
+                      Collect Cash On Delivery (COD)
+                    </p>
+                    <p className="text-lg font-black text-amber-950">৳{selectedTask.codAmount}</p>
+                    <p className="text-[11px] text-amber-700">
+                      Payment Status:{" "}
+                      <span className="font-semibold uppercase">
+                        {selectedTask.payment?.status || "PENDING"}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold px-2.5 py-1 bg-amber-200/80 rounded-md">
+                  Collect Cash
+                </span>
+              </div>
+            )}
+
+            {/* Customer & Route Details */}
+            <div className="space-y-4">
+              {/* Pickup & Delivery Route Card */}
+              <div className="p-4 rounded-xl border bg-card space-y-4 shadow-2xs">
+                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground border-b pb-2">
+                  <MapPin className="w-4 h-4 text-primary" /> Delivery Route
+                </div>
+
+                {/* Pickup Location */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-blue-600 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-blue-600" />
+                      Pickup Origin: {selectedTask.pickupAddress?.recipientName}
+                    </p>
+                    {selectedTask.pickupAddress?.phone && (
+                      <a
+                        href={`tel:${selectedTask.pickupAddress.phone}`}
+                        className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline bg-primary/5 px-2 py-0.5 rounded border border-primary/20"
+                      >
+                        <Phone className="w-3 h-3" /> Call {selectedTask.pickupAddress.phone}
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground pl-3.5 border-l-2 border-blue-200">
+                    {selectedTask.pickupAddress?.addressLine}, {selectedTask.pickupAddress?.area},{" "}
+                    {selectedTask.pickupAddress?.city}
+                  </p>
+                </div>
+
+                {/* Delivery Destination */}
+                <div className="space-y-1.5 pt-2 border-t border-dashed">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold text-green-600 flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-green-600" />
+                      Delivery Destination: {selectedTask.deliveryAddress?.recipientName}
+                    </p>
+                    {selectedTask.deliveryAddress?.phone && (
+                      <a
+                        href={`tel:${selectedTask.deliveryAddress.phone}`}
+                        className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline bg-primary/5 px-2 py-0.5 rounded border border-primary/20"
+                      >
+                        <Phone className="w-3 h-3" /> Call {selectedTask.deliveryAddress.phone}
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground pl-3.5 border-l-2 border-green-200">
+                    {selectedTask.deliveryAddress?.addressLine}, {selectedTask.deliveryAddress?.area},{" "}
+                    {selectedTask.deliveryAddress?.city}
+                  </p>
+                </div>
+              </div>
+
+              {/* Customer Contact & Specifications */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 border rounded-xl bg-card space-y-1">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+                    <User className="w-3.5 h-3.5 text-primary" /> Customer Account
+                  </div>
+                  <p className="text-xs font-semibold text-foreground truncate">
+                    {selectedTask.customer?.name || "Customer"}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {selectedTask.customer?.email}
+                  </p>
+                </div>
+
+                <div className="p-3 border rounded-xl bg-card flex justify-between items-center">
+                  <div>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
+                      <Weight className="w-3.5 h-3.5" /> Weight
+                    </div>
+                    <p className="text-sm font-bold mt-0.5">{selectedTask.weight} kg</p>
+                  </div>
+                  <div className="text-right">
+                    <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground font-medium">
+                      <DollarSign className="w-3.5 h-3.5" /> Delivery Fee
+                    </div>
+                    <p className="text-sm font-bold mt-0.5 text-primary">৳{selectedTask.deliveryFee}</p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedTask.parcelDescription && (
+                <div className="p-3 border rounded-xl bg-muted/20 text-xs space-y-1">
+                  <div className="flex items-center gap-1.5 font-medium text-muted-foreground">
+                    <FileText className="w-3.5 h-3.5" /> Parcel Description
+                  </div>
+                  <p className="text-foreground">{selectedTask.parcelDescription}</p>
+                </div>
               )}
             </div>
-            <p className="text-xs text-muted-foreground">
-              Email: {selectedTask.customer?.email}
-            </p>
-          </div>
 
-          {/* Pickup & Delivery Route */}
-          <div className="p-4 rounded-xl border bg-card space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground border-b pb-2">
-              <MapPin className="w-4 h-4" /> Route Details
-            </div>
-            {/* Pickup Location */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-blue-600 flex items-center gap-1">
-                  ● Pickup: {selectedTask.pickupAddress?.recipientName}
-                </p>
-                {selectedTask.pickupAddress?.phone && (
-                  <a
-                    href={`tel:${selectedTask.pickupAddress.phone}`}
-                    className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
-                  >
-                    <Phone className="w-3 h-3" /> {selectedTask.pickupAddress.phone}
-                  </a>
-                )}
+            {/* Progress Input Controls for Active States */}
+            {!isTerminal && (selectedTask.status !== "COURIER_ASSIGNED" || isAccepted) && (
+              <div className="p-3.5 rounded-xl border bg-muted/20 space-y-2.5">
+                <div className="flex items-center gap-2 text-xs font-semibold">
+                  <Navigation className="w-3.5 h-3.5 text-primary" /> Optional Progress Update Details
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Current Location (e.g. Mohakhali Hub)"
+                    value={currentLocation}
+                    onChange={(e) => setCurrentLocation(e.target.value)}
+                    className="w-full text-xs border rounded-lg px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Status Note (e.g. Traffic delay, with courier)"
+                    value={deliveryNote}
+                    onChange={(e) => setDeliveryNote(e.target.value)}
+                    className="w-full text-xs border rounded-lg px-2.5 py-1.5 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  />
+                </div>
               </div>
-              <p className="text-sm text-muted-foreground pl-3 border-l-2 border-blue-200">
-                {selectedTask.pickupAddress?.addressLine},{" "}
-                {selectedTask.pickupAddress?.area},{" "}
-                {selectedTask.pickupAddress?.city}
-              </p>
-            </div>
+            )}
 
-            {/* Delivery Destination */}
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-green-600 flex items-center gap-1">
-                  ● Destination: {selectedTask.deliveryAddress?.recipientName}
-                </p>
-                {selectedTask.deliveryAddress?.phone && (
-                  <a
-                    href={`tel:${selectedTask.deliveryAddress.phone}`}
-                    className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline"
-                  >
-                    <Phone className="w-3 h-3" /> {selectedTask.deliveryAddress.phone}
-                  </a>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground pl-3 border-l-2 border-green-200">
-                {selectedTask.deliveryAddress?.addressLine},{" "}
-                {selectedTask.deliveryAddress?.area},{" "}
-                {selectedTask.deliveryAddress?.city}
-              </p>
-            </div>
-          </div>
+            {/* Delivery Failure Reason Input Dialog / Drawer Box */}
+            {showFailureInput && (
+              <div className="p-4 rounded-xl border border-red-300 bg-red-50/80 space-y-3">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-red-900">
+                  <AlertTriangle className="w-4 h-4 text-red-600" /> Specify Reason for Failed Delivery Attempt:
+                </div>
 
-          {/* Parcel Specifics */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 border rounded-lg bg-card">
-              <p className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                <Weight className="w-3.5 h-3.5" /> Weight
-              </p>
-              <p className="text-sm font-semibold mt-1">
-                {selectedTask.weight} kg
-              </p>
-            </div>
-            <div className="p-3 border rounded-lg bg-card">
-              <p className="text-xs text-muted-foreground flex items-center gap-1 font-medium">
-                <DollarSign className="w-3.5 h-3.5" /> Delivery Fee
-              </p>
-              <p className="text-sm font-semibold mt-1">
-                ৳{selectedTask.deliveryFee}
-              </p>
-            </div>
-          </div>
+                <div className="grid grid-cols-1 gap-1.5 text-xs">
+                  {[
+                    "Recipient phone switched off / unreachable",
+                    "Recipient requested delivery reschedule",
+                    "Incorrect destination address / location not found",
+                    "Recipient refused to accept parcel",
+                    "Recipient refused COD payment",
+                  ].map((preset) => (
+                    <button
+                      type="button"
+                      key={preset}
+                      onClick={() => setFailureReason(preset)}
+                      className={`text-left px-2.5 py-1.5 rounded-md border text-xs transition-colors ${
+                        failureReason === preset
+                          ? "bg-red-200 border-red-400 font-medium text-red-950"
+                          : "bg-white border-red-200 hover:bg-red-100/50 text-red-900"
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
 
-          {/* Interactive Progress Updating Controls */}
-          {!isDelivered && !isCancelled && !isPendingAction && (
-            <div className="p-4 rounded-xl border bg-muted/20 space-y-3">
-              <div className="flex items-center gap-2 text-sm font-semibold">
-                <Navigation className="w-4 h-4 text-primary" /> Delivery Progress Note
-              </div>
-              <div className="space-y-2">
                 <input
                   type="text"
-                  placeholder="Current Location (e.g. Mohakhali / Hub)"
-                  value={currentLocation}
-                  onChange={(e) => setCurrentLocation(e.target.value)}
-                  className="w-full text-xs border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Or enter custom failure reason..."
+                  value={failureReason}
+                  onChange={(e) => setFailureReason(e.target.value)}
+                  className="w-full text-xs border border-red-300 rounded-lg p-2 bg-white"
                 />
+
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="w-full"
+                    onClick={() =>
+                      handleStatusUpdate("DELIVERY_FAILED", failureReason || "Delivery attempt failed")
+                    }
+                    disabled={updatePending || !failureReason.trim()}
+                  >
+                    {updatePending ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> Recording...
+                      </>
+                    ) : (
+                      "Confirm Failed Delivery"
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setShowFailureInput(false);
+                      setFailureReason("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Rejection Reason Input when rejecting */}
+            {showRejectInput && (
+              <div className="p-4 rounded-xl border border-red-300 bg-red-50/80 space-y-3">
+                <p className="text-xs font-semibold text-red-900">
+                  Reason for rejecting this task:
+                </p>
+                <div className="grid grid-cols-1 gap-1 text-xs">
+                  {[
+                    "Courier unavailable / off-duty",
+                    "Route outside current operational zone",
+                    "Vehicle breakdown / technical issue",
+                    "Over capacity for current trip",
+                  ].map((preset) => (
+                    <button
+                      type="button"
+                      key={preset}
+                      onClick={() => setRejectReason(preset)}
+                      className={`text-left px-2 py-1 rounded border text-xs transition-colors ${
+                        rejectReason === preset
+                          ? "bg-red-200 border-red-400 font-medium text-red-950"
+                          : "bg-white border-red-200 hover:bg-red-100/50 text-red-900"
+                      }`}
+                    >
+                      {preset}
+                    </button>
+                  ))}
+                </div>
                 <input
                   type="text"
-                  placeholder="Progress Note (e.g. Approaching delivery location)"
-                  value={deliveryNote}
-                  onChange={(e) => setDeliveryNote(e.target.value)}
-                  className="w-full text-xs border rounded-lg px-3 py-2 bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                  placeholder="Enter custom rejection reason..."
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  className="w-full text-xs border border-red-300 rounded-lg p-2 bg-white"
                 />
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    className="w-full"
+                    onClick={handleReject}
+                    disabled={respondPending}
+                  >
+                    {respondPending ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> Rejecting...
+                      </>
+                    ) : (
+                      "Confirm Rejection"
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setShowRejectInput(false);
+                      setRejectReason("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Rejection Reason Input when rejecting */}
-          {showRejectInput && (
-            <div className="p-3 rounded-lg border border-red-200 bg-red-50 space-y-2">
-              <p className="text-xs font-semibold text-red-800">
-                Reason for rejection:
-              </p>
-              <input
-                type="text"
-                placeholder="Why are you unable to take this task?"
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                className="w-full text-xs border border-red-300 rounded-lg p-2 bg-white"
-              />
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  className="w-full"
-                  onClick={handleReject}
-                  disabled={respondPending}
+            {/* Tracking Events Timeline Accordion */}
+            {selectedTask.trackingEvents && selectedTask.trackingEvents.length > 0 && (
+              <div className="pt-2 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowTrackingHistory(!showTrackingHistory)}
+                  className="w-full flex items-center justify-between text-xs font-semibold text-muted-foreground hover:text-foreground py-1"
                 >
-                  {respondPending ? "Rejecting..." : "Confirm Reject"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setShowRejectInput(false)}
-                >
-                  Cancel
-                </Button>
+                  <span className="flex items-center gap-1.5">
+                    <History className="w-3.5 h-3.5 text-primary" />
+                    Tracking Journey ({selectedTask.trackingEvents.length} events)
+                  </span>
+                  <span>{showTrackingHistory ? "Hide ▲" : "View ▼"}</span>
+                </button>
+
+                {showTrackingHistory && (
+                  <div className="mt-2.5 space-y-2 border rounded-xl p-3 bg-muted/10 max-h-48 overflow-y-auto">
+                    {selectedTask.trackingEvents.map((event: TrackingEventItem, idx: number) => (
+                      <div key={event.id || idx} className="text-xs space-y-0.5 border-b last:border-b-0 pb-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="font-semibold text-foreground">
+                            {event.status.replace(/_/g, " ")}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(event.createdAt).toLocaleTimeString([], {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              day: "numeric",
+                              month: "short",
+                            })}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground text-[11px]">{event.description}</p>
+                        {event.location && (
+                          <p className="text-[10px] text-primary/80">📍 {event.location}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
         {/* Footer Actions Based on Current Status */}
         <SheetFooter className="p-0 pt-4 border-t mt-6">
-          {/* Scenario 1: New Task Pending Response */}
-          {isPendingAction && !showRejectInput && (
-            <div className="grid grid-cols-2 gap-3 w-full">
-              <Button
-                variant="outline"
-                className="w-full text-red-600 hover:bg-red-50 hover:text-red-700"
-                onClick={() => setShowRejectInput(true)}
-                disabled={respondPending}
-              >
-                <XCircle className="w-4 h-4 mr-1.5" /> Reject Task
-              </Button>
-              <Button
-                variant="default"
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleAccept}
-                disabled={respondPending}
-              >
-                <CheckCircle className="w-4 h-4 mr-1.5" />
-                {respondPending ? "Accepting..." : "Accept Task"}
-              </Button>
-            </div>
-          )}
-
-          {/* Scenario 2: Active Task Progression */}
-          {!isPendingAction && !isDelivered && !isCancelled && (
-            <div className="flex flex-col gap-2 w-full">
-              {selectedTask.status === "COURIER_ASSIGNED" ||
-              selectedTask.status === "PICKUP_REQUESTED" ? (
-                <Button
-                  variant="default"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-                  onClick={() => handleStatusUpdate("PICKED_UP")}
-                  disabled={updatePending}
-                >
-                  <Truck className="w-4 h-4 mr-1.5" />
-                  {updatePending ? "Updating..." : "Mark as Picked Up"}
-                </Button>
-              ) : selectedTask.status === "PICKED_UP" ||
-                selectedTask.status === "IN_TRANSIT" ? (
-                <Button
-                  variant="default"
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
-                  onClick={() => handleStatusUpdate("OUT_FOR_DELIVERY")}
-                  disabled={updatePending}
-                >
-                  <Navigation className="w-4 h-4 mr-1.5" />
-                  {updatePending ? "Updating..." : "Out for Delivery"}
-                </Button>
-              ) : (
-                <Button
-                  variant="default"
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
-                  onClick={() => handleStatusUpdate("DELIVERED")}
-                  disabled={updatePending}
-                >
-                  <CheckCircle className="w-4 h-4 mr-1.5" />
-                  {updatePending ? "Completing..." : "Mark as Delivered"}
-                </Button>
+          {selectedTask && (
+            <>
+              {/* 1. COURIER_ASSIGNED (Pending Courier Decision) */}
+              {selectedTask.status === "COURIER_ASSIGNED" && !isAccepted && !showRejectInput && (
+                <div className="grid grid-cols-2 gap-3 w-full">
+                  <Button
+                    variant="outline"
+                    className="w-full text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                    onClick={() => setShowRejectInput(true)}
+                    disabled={respondPending}
+                  >
+                    <XCircle className="w-4 h-4 mr-1.5" /> Reject Task
+                  </Button>
+                  <Button
+                    variant="default"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    onClick={handleAccept}
+                    disabled={respondPending}
+                  >
+                    {respondPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Accepting...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-1.5" /> Accept Task
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
 
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-xs text-muted-foreground hover:text-red-600"
-                onClick={() => handleStatusUpdate("DELIVERY_FAILED")}
-                disabled={updatePending}
-              >
-                <AlertTriangle className="w-3.5 h-3.5 mr-1" /> Mark Delivery Attempt Failed
-              </Button>
-            </div>
-          )}
+              {/* 2. Ready for Pickup: COURIER_ASSIGNED (Accepted) OR PICKUP_REQUESTED */}
+              {((selectedTask.status === "COURIER_ASSIGNED" && isAccepted) ||
+                selectedTask.status === "PICKUP_REQUESTED") && (
+                <div className="w-full">
+                  <Button
+                    variant="default"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                    onClick={() => handleStatusUpdate("PICKED_UP")}
+                    disabled={updatePending}
+                  >
+                    {updatePending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating Status...
+                      </>
+                    ) : (
+                      <>
+                        <Truck className="w-4 h-4 mr-2" /> Mark as Picked Up
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
 
-          {/* Scenario 3: Completed or Cancelled */}
-          {(isDelivered || isCancelled) && (
-            <Button variant="outline" className="w-full" onClick={onClose}>
-              Close
-            </Button>
+              {/* 3. PICKED_UP: Start Transit */}
+              {selectedTask.status === "PICKED_UP" && (
+                <div className="w-full">
+                  <Button
+                    variant="default"
+                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold"
+                    onClick={() => handleStatusUpdate("IN_TRANSIT")}
+                    disabled={updatePending}
+                  >
+                    {updatePending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating Status...
+                      </>
+                    ) : (
+                      <>
+                        <Truck className="w-4 h-4 mr-2" /> Start Transit
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* 4. IN_TRANSIT: Move to OUT_FOR_DELIVERY */}
+              {selectedTask.status === "IN_TRANSIT" && (
+                <div className="w-full">
+                  <Button
+                    variant="default"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold"
+                    onClick={() => handleStatusUpdate("OUT_FOR_DELIVERY")}
+                    disabled={updatePending}
+                  >
+                    {updatePending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating Status...
+                      </>
+                    ) : (
+                      <>
+                        <Navigation className="w-4 h-4 mr-2" /> Mark Out for Delivery
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* 5. OUT_FOR_DELIVERY: Complete Delivery or Record Failure */}
+              {selectedTask.status === "OUT_FOR_DELIVERY" && !showFailureInput && (
+                <div className="flex flex-col gap-2 w-full">
+                  <Button
+                    variant="default"
+                    className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold"
+                    onClick={() => handleStatusUpdate("DELIVERED")}
+                    disabled={updatePending}
+                  >
+                    {updatePending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Completing Delivery...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" /> Mark as Delivered
+                      </>
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs text-red-600 hover:bg-red-50 hover:text-red-700 border-red-200"
+                    onClick={() => setShowFailureInput(true)}
+                    disabled={updatePending}
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5 mr-1 text-red-500" />
+                    Report Delivery Attempt Failed
+                  </Button>
+                </div>
+              )}
+
+              {/* 6. Terminal States (DELIVERED, DELIVERY_FAILED, CANCELLED, RETURNED) */}
+              {isTerminal && (
+                <Button variant="outline" className="w-full font-medium" onClick={onClose}>
+                  Close Task Sheet
+                </Button>
+              )}
+            </>
           )}
         </SheetFooter>
       </SheetContent>

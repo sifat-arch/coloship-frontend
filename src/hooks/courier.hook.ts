@@ -3,6 +3,7 @@ import {
   getCourierDashboardStats,
   getCourierProfile,
   getMyAssignments,
+  getSingleAssignment,
   respondToAssignment,
   toggleAvailability,
   updateCourierProfile,
@@ -28,13 +29,22 @@ export const useSuspenseMyAssignments = (status?: string) => {
   });
 };
 
+export const useGetCourierAssignment = (taskId: string | null) => {
+  return useQuery({
+    queryKey: ["courier-task", taskId],
+    queryFn: () => getSingleAssignment(taskId!),
+    enabled: Boolean(taskId),
+  });
+};
+
 export const useRespondAssignment = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ taskId, payload }: { taskId: string; payload: RespondTaskPayload }) =>
       respondToAssignment(taskId, payload),
-    onSuccess: () => {
+    onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ["courier-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["courier-task", taskId] });
       queryClient.invalidateQueries({ queryKey: ["courier-stats"] });
     },
   });
@@ -50,8 +60,9 @@ export const useUpdateTaskStatus = () => {
       taskId: string;
       payload: UpdateTaskStatusPayload;
     }) => updateTaskStatus(taskId, payload),
-    onSuccess: () => {
+    onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ["courier-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["courier-task", taskId] });
       queryClient.invalidateQueries({ queryKey: ["courier-stats"] });
     },
   });
