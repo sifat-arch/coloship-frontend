@@ -100,6 +100,10 @@ export interface CustomerShipmentItem {
     status: "PENDING" | "PAID" | "FAILED" | "CANCELED" | "REFUNDED" | string;
     amount: number;
     paidAt?: string | null;
+    refundTrxId?: string | null;
+    refundAmount?: number | null;
+    refundedAt?: string | null;
+    refundReason?: string | null;
   } | null;
 }
 
@@ -125,4 +129,23 @@ export interface CustomerShipmentsListResponse {
 
 export interface CancelShipmentPayload {
   reason?: string;
+}
+
+export interface PaymentDetails {
+  id: string;
+  shipmentId: string;
+  status: "PENDING" | "PAID" | "FAILED" | "CANCELED" | "REFUNDED" | "UNPAID" | string;
+  method: "BKASH" | "COD" | string;
+  amount: number;
+  currency: string;
+  paymentGateway?: string;
+  merchantInvoiceNumber?: string;
+  paymentUrl?: string | null;
+  bkashPaymentId?: string | null;
+  bkashTrxId?: string | null;
+  payerReference?: string | null;
+  paidAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  shipment?: CustomerShipmentItem;
 }

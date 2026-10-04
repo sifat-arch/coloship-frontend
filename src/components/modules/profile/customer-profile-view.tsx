@@ -23,6 +23,7 @@ import Link from "next/link";
 export default function CustomerProfileView() {
   const { data: userData, isLoading: userLoading } = useGetMe();
   const user = userData?.data;
+  const isSuspended = user?.status === "SUSPENDED" || user?.status === "BLOCKED";
 
   // Additional overview metrics
   const { data: shipmentsData } = useGetMyShipments({ limit: 1 });
@@ -50,7 +51,7 @@ export default function CustomerProfileView() {
             currentImageUrl={user?.imageUrl}
             fallbackName={user?.name || "Customer"}
             size="lg"
-            editable={true}
+            editable={!isSuspended}
           />
 
           <div className="space-y-1">
@@ -73,17 +74,32 @@ export default function CustomerProfileView() {
                 <Calendar className="w-3.5 h-3.5" /> Member Account
               </span>
               <span>•</span>
-              <span className="font-semibold text-emerald-600">● Active</span>
+              {isSuspended ? (
+                <span className="font-semibold text-amber-600">● Suspended</span>
+              ) : (
+                <span className="font-semibold text-emerald-600">● Active</span>
+              )}
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 self-stretch sm:self-auto">
-          <Link href="/customer/book-parcel" className="w-full sm:w-auto">
-            <Button size="sm" className="w-full sm:w-auto gap-1.5 shadow-2xs">
-              <Package className="w-4 h-4" /> Book New Parcel
+          {isSuspended ? (
+            <Button
+              size="sm"
+              disabled
+              className="w-full sm:w-auto gap-1.5 shadow-2xs opacity-60 cursor-not-allowed"
+              title="Account suspended: Booking is disabled"
+            >
+              <Package className="w-4 h-4" /> Book Parcel (Suspended)
             </Button>
-          </Link>
+          ) : (
+            <Link href="/customer/book-parcel" className="w-full sm:w-auto">
+              <Button size="sm" className="w-full sm:w-auto gap-1.5 shadow-2xs">
+                <Package className="w-4 h-4" /> Book New Parcel
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -188,6 +204,7 @@ export default function CustomerProfileView() {
                 currentImageUrl={user?.imageUrl}
                 fallbackName={user?.name}
                 size="sm"
+                editable={!isSuspended}
               />
             </div>
           </CardContent>

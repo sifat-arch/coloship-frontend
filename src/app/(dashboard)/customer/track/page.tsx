@@ -38,15 +38,16 @@ function TrackParcelContent() {
   }, [initialNumber]);
 
   // Query Hook
-  const { data, isLoading, isError, error, refetch } =
-    useTrackShipment(searchedNumber);
+  const { data, isLoading, isError } = useTrackShipment(searchedNumber);
 
   const shipment = data?.data;
 
   const handleSearch = (trackingNumber: string) => {
     const trimmed = trackingNumber.trim();
     setSearchedNumber(trimmed);
-    router.replace(`/customer/track?trackingNumber=${encodeURIComponent(trimmed)}`);
+    router.replace(
+      `/customer/track?trackingNumber=${encodeURIComponent(trimmed)}`,
+    );
   };
 
   return (
@@ -169,7 +170,8 @@ function TrackParcelContent() {
           <div className="pt-2">
             <Link href="/customer/shipments">
               <Button variant="outline" size="sm" className="gap-2 text-xs">
-                <Package className="w-3.5 h-3.5" /> View My Shipments to Copy Tracking ID
+                <Package className="w-3.5 h-3.5" /> View My Shipments to Copy
+                Tracking ID
               </Button>
             </Link>
           </div>

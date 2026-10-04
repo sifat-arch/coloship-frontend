@@ -25,9 +25,11 @@ import {
   ArrowRight,
   PackageOpen,
   Calendar,
+  RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "@/components/ui/toast";
+import { useGetMe } from "@/hooks/auth.hook";
 
 interface ShipmentTableProps {
   shipments: CustomerShipmentItem[];
@@ -46,6 +48,10 @@ export default function ShipmentTable({
   onPageChange,
   onSelectShipment,
 }: ShipmentTableProps) {
+  const { data: userData } = useGetMe();
+  const isSuspended =
+    userData?.data?.status === "SUSPENDED" || userData?.data?.status === "BLOCKED";
+
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [cancelTarget, setCancelTarget] = useState<CustomerShipmentItem | null>(
     null,
@@ -201,7 +207,15 @@ export default function ShipmentTable({
 
                       {/* Status */}
                       <TableCell>
-                        <ShipmentStatusBadge status={item.status} />
+                        <div className="flex flex-col gap-1 items-start">
+                          <ShipmentStatusBadge status={item.status} />
+                          {item.payment?.status === "REFUNDED" && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                              <RotateCcw className="w-2.5 h-2.5" />
+                              Refunded (৳{item.payment.refundAmount || item.payment.amount})
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
 
                       {/* Created Date */}
@@ -236,8 +250,18 @@ export default function ShipmentTable({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7.5 px-2 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-500/10"
-                              onClick={() => setCancelTarget(item)}
+                              className={`h-7.5 px-2 text-xs ${
+                                isSuspended
+                                  ? "text-muted-foreground opacity-50 cursor-not-allowed"
+                                  : "text-rose-600 hover:text-rose-700 hover:bg-rose-500/10"
+                              }`}
+                              disabled={isSuspended}
+                              title={
+                                isSuspended
+                                  ? "Account suspended: Cannot cancel shipments"
+                                  : undefined
+                              }
+                              onClick={() => !isSuspended && setCancelTarget(item)}
                             >
                               <XCircle className="w-3.5 h-3.5" />
                               Cancel

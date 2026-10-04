@@ -30,6 +30,8 @@ import {
   AlertTriangle,
   Loader2,
   FileText,
+  CreditCard,
+  RotateCcw,
 } from "lucide-react";
 
 interface ShipmentDetailsSheetProps {
@@ -162,6 +164,77 @@ export default function ShipmentDetailsSheet({
                       <FileText className="w-3.5 h-3.5" /> Description & Instructions
                     </span>
                     <p className="text-foreground">{shipment.parcelDescription}</p>
+                  </div>
+                )}
+
+                {/* Payment & Refund Information */}
+                {shipment.payment && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <CreditCard className="w-4 h-4 text-primary" /> Payment & Refund Details
+                    </h4>
+
+                    {shipment.payment.status === "REFUNDED" ? (
+                      <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/20 space-y-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+                            <RotateCcw className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            bKash Refund Completed
+                          </span>
+                          <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30">
+                            REFUNDED
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-emerald-500/20">
+                          <div>
+                            <span className="text-muted-foreground block text-[11px]">Refunded Amount</span>
+                            <span className="font-bold text-foreground">
+                              ৳{shipment.payment.refundAmount || shipment.payment.amount}
+                            </span>
+                          </div>
+                          {shipment.payment.refundTrxId && (
+                            <div>
+                              <span className="text-muted-foreground block text-[11px]">Refund TrxID</span>
+                              <div className="flex items-center gap-1 font-mono font-medium text-foreground">
+                                <span>{shipment.payment.refundTrxId}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopy(shipment.payment?.refundTrxId || "")}
+                                  className="text-muted-foreground hover:text-foreground"
+                                  title="Copy Refund TrxID"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                          {shipment.payment.refundedAt && (
+                            <div className="col-span-2">
+                              <span className="text-muted-foreground block text-[11px]">Refund Date</span>
+                              <span className="text-foreground">
+                                {new Date(shipment.payment.refundedAt).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3.5 rounded-xl border bg-card text-xs space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Payment Method</span>
+                          <span className="font-semibold text-foreground">
+                            {shipment.payment.method === "BKASH" ? "bKash Online Gateway" : "Cash on Delivery (COD)"}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground">Payment Status</span>
+                          <span className="font-semibold text-foreground capitalize">
+                            {shipment.payment.status.toLowerCase()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

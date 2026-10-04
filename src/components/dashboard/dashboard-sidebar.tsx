@@ -4,6 +4,7 @@ import * as React from "react";
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -18,7 +19,10 @@ import { UserRole } from "@/types";
 import { adminRoutes, courierRoutes, customerRoutes } from "@/rouutes";
 import { sidebarItems } from "@/types/sidebar.types";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { LogOut, Loader2 } from "lucide-react";
+import { useLogout } from "@/hooks/auth.hook";
+import { toast } from "@/components/ui/toast";
 
 const sidebarRoutes: Record<UserRole, sidebarItems> = {
   ADMIN: adminRoutes,
@@ -28,7 +32,29 @@ const sidebarRoutes: Record<UserRole, sidebarItems> = {
 
 export function DashboardSidebar({ role }: { role: UserRole }) {
   const pathname = usePathname();
+  const router = useRouter();
   const routes = sidebarRoutes[role] || [];
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+
+  const handleLogout = () => {
+    logout(undefined, {
+      onSuccess: () => {
+        toast.add({
+          title: "Logged out successfully",
+          description: "See you again soon!",
+          type: "success",
+        });
+        router.push("/login");
+      },
+      onError: (err) => {
+        toast.add({
+          title: "Logout failed",
+          description: err.message || "Something went wrong while logging out",
+          type: "error",
+        });
+      },
+    });
+  };
 
   return (
     <Sidebar>
@@ -58,6 +84,26 @@ export function DashboardSidebar({ role }: { role: UserRole }) {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
+      <SidebarFooter className="p-3 border-t">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              disabled={isLoggingOut}
+              className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 cursor-pointer w-full transition-colors font-medium"
+            >
+              {isLoggingOut ? (
+                <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+              ) : (
+                <LogOut className="w-4 h-4 text-red-500" />
+              )}
+              <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );

@@ -9,11 +9,16 @@ import {
   userRegistration,
   verifyAccount,
 } from "@/api";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 export const useLogin = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: userLogin,
+    onSuccess: () => {
+      queryClient.clear();
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    },
   });
 };
 export const useVerifyAccount = () => {
@@ -35,8 +40,12 @@ export const useGetMe = () => {
 };
 
 export const useLogout = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: userLogout,
+    onSuccess: () => {
+      queryClient.clear();
+    },
   });
 };
 export const useForgotPassword = () => {
@@ -50,8 +59,13 @@ export const useResetPassword = () => {
   });
 };
 export const useGoogleOAuth = () => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: googleOAuth,
+    onSuccess: () => {
+      queryClient.clear();
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    },
   });
 };
 export const useApplyAsCourier = () => {

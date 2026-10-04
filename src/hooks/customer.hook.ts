@@ -8,6 +8,7 @@ import {
   getShipmentDetails,
   initiatePayment,
   trackShipment,
+  getPaymentDetails,
 } from "@/api/customer.api";
 import {
   CancelShipmentPayload,
@@ -107,5 +108,14 @@ export const useCancelShipment = () => {
         queryKey: ["shipment-details", variables.id],
       });
     },
+  });
+};
+
+// ৫. পেমেন্টের বিস্তারিত ফেচ করা
+export const useGetPaymentDetails = (paymentId?: string | null) => {
+  return useQuery({
+    queryKey: ["payment-details", paymentId],
+    queryFn: () => getPaymentDetails(paymentId!),
+    enabled: Boolean(paymentId && paymentId.trim().length > 0),
   });
 };

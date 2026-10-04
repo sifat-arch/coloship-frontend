@@ -10,6 +10,7 @@ import {
   Plus,
   Loader2,
   CheckCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/toast";
+import { useGetMe } from "@/hooks/auth.hook";
 import {
   useGetAddresses,
   useCreateShipment,
@@ -38,13 +40,18 @@ export type CreateShipmentFormValues = {
   pickupAddressId: string;
   deliveryAddressId: string;
   deliveryType: "STANDARD" | "EXPRESS";
-  weight: number;
-  codAmount: number;
+  weight: number | "";
+  codAmount: number | "";
   parcelDescription: string;
   paymentMethod: "BKASH" | "COD";
 };
 
 export default function BookParcelForm() {
+  // Current User status
+  const { data: userData } = useGetMe();
+  const isSuspended =
+    userData?.data?.status === "SUSPENDED" || userData?.data?.status === "BLOCKED";
+
   // 1. Fetch Saved Addresses from Backend
   const { data: addressData, isLoading: addressLoading } = useGetAddresses();
   const savedAddresses = addressData?.data || [];
@@ -68,8 +75,8 @@ export default function BookParcelForm() {
       pickupAddressId: "",
       deliveryAddressId: "",
       deliveryType: "STANDARD",
-      weight: 1,
-      codAmount: 0,
+      weight: "" as unknown as number,
+      codAmount: "" as unknown as number,
       parcelDescription: "",
       paymentMethod: "BKASH",
     } as CreateShipmentFormValues,
@@ -84,7 +91,8 @@ export default function BookParcelForm() {
         return;
       }
 
-      if (value.weight <= 0) {
+      const parsedWeight = Number(value.weight);
+      if (!value.weight || isNaN(parsedWeight) || parsedWeight <= 0) {
         toast.add({
           title: "Invalid Weight",
           description: "Parcel weight must be greater than 0 kg.",
@@ -100,8 +108,8 @@ export default function BookParcelForm() {
           pickupAddressId: value.pickupAddressId || undefined,
           deliveryAddressId: value.deliveryAddressId,
           deliveryType: value.deliveryType,
-          weight: Number(value.weight),
-          codAmount: Number(value.codAmount || 0),
+          weight: parsedWeight,
+          codAmount: value.codAmount ? Number(value.codAmount) : 0,
           parcelDescription: value.parcelDescription.trim() || undefined,
         },
         {
@@ -163,10 +171,24 @@ export default function BookParcelForm() {
 
   return (
     <div className="space-y-6">
+      {/* Account Suspended Alert Banner */}
+      {isSuspended && (
+        <div className="p-4 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 dark:border-amber-800 text-amber-900 dark:text-amber-200 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <h4 className="text-sm font-bold">Parcel Booking is Temporarily Disabled</h4>
+            <p className="text-xs">
+              Your customer account is currently suspended. You cannot place new parcel bookings or add new delivery addresses until the suspension is resolved.
+            </p>
+          </div>
+        </div>
+      )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (isSuspended) return;
           form.handleSubmit();
         }}
       >
@@ -199,6 +221,8 @@ export default function BookParcelForm() {
                           variant="outline"
                           size="sm"
                           className="h-8 gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/5"
+                          disabled={isSuspended}
+                          title={isSuspended ? "Account suspended" : undefined}
                           onClick={() => {
                             setAddressTarget("pickup");
                             setIsAddAddressOpen(true);
@@ -214,7 +238,7 @@ export default function BookParcelForm() {
                         value={field.state.value}
                         onChange={(e) => field.handleChange(e.target.value)}
                         className="w-full h-10 px-3 py-2 text-sm rounded-lg border border-input bg-background focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary disabled:opacity-50 transition-colors"
-                        disabled={addressLoading}
+                        disabled={addressLoading || isSuspended}
                       >
                         <option value="">
                           {addressLoading ? "Loading addresses..." : "-- Select Pickup Address (Optional) --"}
@@ -245,6 +269,8 @@ export default function BookParcelForm() {
                           variant="outline"
                           size="sm"
                           className="h-8 gap-1.5 text-xs text-primary border-primary/30 hover:bg-primary/5"
+                          disabled={isSuspended}
+                          title={isSuspended ? "Account suspended" : undefined}
                           onClick={() => {
                             setAddressTarget("delivery");
                             setIsAddAddressOpen(true);
@@ -311,13 +337,12 @@ export default function BookParcelForm() {
                           min="0.1"
                           step="0.1"
                           placeholder="e.g. 1"
-                          value={field.state.value}
+                          value={field.state.value === "" || field.state.value === undefined ? "" : field.state.value}
                           onBlur={field.handleBlur}
-                          onChange={(e) =>
-                            field.handleChange(
-                              e.target.value === "" ? 0 : Number(e.target.value)
-                            )
-                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            field.handleChange(val === "" ? ("" as any) : Number(val));
+                          }}
                           required
                         />
                         <p className="text-xs text-muted-foreground">
@@ -341,13 +366,12 @@ export default function BookParcelForm() {
                           min="0"
                           step="10"
                           placeholder="0"
-                          value={field.state.value}
+                          value={field.state.value === "" || field.state.value === undefined ? "" : field.state.value}
                           onBlur={field.handleBlur}
-                          onChange={(e) =>
-                            field.handleChange(
-                              e.target.value === "" ? 0 : Number(e.target.value)
-                            )
-                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            field.handleChange(val === "" ? ("" as any) : Number(val));
+                          }}
                         />
                         <p className="text-xs text-muted-foreground">
                           Enter 0 if payment is already collected from recipient.
@@ -614,9 +638,14 @@ export default function BookParcelForm() {
                   type="submit"
                   size="lg"
                   className="w-full font-semibold gap-2 mt-2"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isSuspended}
                 >
-                  {isSubmitting ? (
+                  {isSuspended ? (
+                    <>
+                      <AlertTriangle className="w-4 h-4 text-amber-500" />
+                      Account Suspended (Booking Disabled)
+                    </>
+                  ) : isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Booking Parcel...

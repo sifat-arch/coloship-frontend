@@ -97,6 +97,8 @@ const CourierProfileView = () => {
 
   const isApproved =
     profile.isApproved || profile.VerificationStatus === "APPROVED";
+  const isSuspended =
+    profile.user?.status === "SUSPENDED" || profile.user?.status === "BLOCKED";
 
   return (
     <div className="space-y-6">
@@ -107,6 +109,7 @@ const CourierProfileView = () => {
             currentImageUrl={profile.user?.imageUrl || profile.profileImageUrl}
             fallbackName={profile.user?.name}
             size="md"
+            editable={!isSuspended}
           />
           <div className="space-y-1">
             <div className="flex items-center gap-3">
@@ -140,20 +143,30 @@ const CourierProfileView = () => {
                 })}
               </span>
               <span>•</span>
-              <span
-                className={`font-semibold ${
-                  profile.isAvailable ? "text-green-600" : "text-gray-500"
-                }`}
-              >
-                {profile.isAvailable ? "● Online (Available)" : "○ Offline"}
-              </span>
+              {isSuspended ? (
+                <span className="font-semibold text-amber-600">● Suspended</span>
+              ) : (
+                <span
+                  className={`font-semibold ${
+                    profile.isAvailable ? "text-green-600" : "text-gray-500"
+                  }`}
+                >
+                  {profile.isAvailable ? "● Online (Available)" : "○ Offline"}
+                </span>
+              )}
             </div>
           </div>
         </div>
 
         {!isEditing && (
-          <Button onClick={handleStartEdit} variant="outline" size="sm">
-            Edit Information
+          <Button
+            onClick={handleStartEdit}
+            variant="outline"
+            size="sm"
+            disabled={isSuspended}
+            title={isSuspended ? "Account suspended: Profile details cannot be edited" : undefined}
+          >
+            {isSuspended ? "Edit Disabled (Suspended)" : "Edit Information"}
           </Button>
         )}
       </div>

@@ -15,6 +15,7 @@ import { useState } from "react";
 import { Eye, EyeClosed } from "lucide-react";
 import { useGoogleOAuth, useLogin } from "@/hooks";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "../ui/toast";
 import { Spinner } from "../ui/spinner";
 import { GoogleLogin } from "@react-oauth/google";
@@ -24,6 +25,7 @@ import Link from "next/link";
 const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(true);
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { mutate: login, isPending: loginPending } = useLogin();
 
@@ -43,6 +45,7 @@ const LoginForm = () => {
 
       login(loginData, {
         onSuccess: (res) => {
+          queryClient.clear();
           toast.add({
             title: "Login Successful",
             description: "Welcome Back",

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useGetAddresses } from "@/hooks/customer.hook";
+import { useGetMe } from "@/hooks/auth.hook";
 import AddressCard from "./address-card";
 import { AddAddressModal } from "@/components/modules/book-parcel/add-address-modal";
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,17 @@ import {
   Loader2,
   Building2,
   PackagePlus,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 
 export default function AddressList() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const { data: userData } = useGetMe();
+  const isSuspended =
+    userData?.data?.status === "SUSPENDED" || userData?.data?.status === "BLOCKED";
 
   const { data, isLoading } = useGetAddresses();
   const addresses = data?.data || [];
@@ -51,10 +57,32 @@ export default function AddressList() {
           />
         </div>
 
-        <Button onClick={() => setIsModalOpen(true)} className="gap-2 shadow-2xs">
-          <Plus className="w-4 h-4" /> Add New Address
+        <Button
+          onClick={() => setIsModalOpen(true)}
+          className="gap-2 shadow-2xs"
+          disabled={isSuspended}
+          title={isSuspended ? "Account suspended: Cannot add address" : undefined}
+        >
+          {isSuspended ? (
+            <>
+              <AlertTriangle className="w-4 h-4 text-amber-500" /> Add Address (Suspended)
+            </>
+          ) : (
+            <>
+              <Plus className="w-4 h-4" /> Add New Address
+            </>
+          )}
         </Button>
       </div>
+
+      {isSuspended && (
+        <div className="p-3.5 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 text-xs flex items-center gap-2.5">
+          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+          <span>
+            <strong>Account Suspended:</strong> Adding new addresses is disabled. You can still view your saved addresses.
+          </span>
+        </div>
+      )}
 
       {/* Content Grid */}
       {isLoading ? (
@@ -75,8 +103,21 @@ export default function AddressList() {
             </p>
           </div>
           <div className="pt-2">
-            <Button onClick={() => setIsModalOpen(true)} className="gap-2">
-              <Plus className="w-4 h-4" /> Add Your First Address
+            <Button
+              onClick={() => setIsModalOpen(true)}
+              className="gap-2"
+              disabled={isSuspended}
+              title={isSuspended ? "Account suspended: Cannot add address" : undefined}
+            >
+              {isSuspended ? (
+                <>
+                  <AlertTriangle className="w-4 h-4 text-amber-500" /> Adding Disabled (Suspended)
+                </>
+              ) : (
+                <>
+                  <Plus className="w-4 h-4" /> Add Your First Address
+                </>
+              )}
             </Button>
           </div>
         </div>

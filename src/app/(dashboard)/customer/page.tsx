@@ -31,6 +31,7 @@ export default function CustomerDashboardOverview() {
   // Current User
   const { data: userData } = useGetMe();
   const user = userData?.data;
+  const isSuspended = user?.status === "SUSPENDED" || user?.status === "BLOCKED";
 
   // Shipments (Latest 5)
   const { data: shipmentsData, isLoading: shipmentsLoading } = useGetMyShipments({
@@ -78,11 +79,22 @@ export default function CustomerDashboardOverview() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Link href="/customer/book-parcel">
-              <Button size="lg" className="gap-2 shadow-xs font-semibold">
-                <Plus className="w-4 h-4" /> Book a Parcel
+            {isSuspended ? (
+              <Button
+                size="lg"
+                disabled
+                className="gap-2 shadow-xs font-semibold opacity-60 cursor-not-allowed"
+                title="Account suspended: Booking is disabled"
+              >
+                <Plus className="w-4 h-4" /> Book a Parcel (Suspended)
               </Button>
-            </Link>
+            ) : (
+              <Link href="/customer/book-parcel">
+                <Button size="lg" className="gap-2 shadow-xs font-semibold">
+                  <Plus className="w-4 h-4" /> Book a Parcel
+                </Button>
+              </Link>
+            )}
             <Link href="/customer/shipments">
               <Button size="lg" variant="outline" className="gap-2">
                 <Package className="w-4 h-4" /> My Shipments
@@ -207,11 +219,22 @@ export default function CustomerDashboardOverview() {
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               Start by booking your first parcel delivery with fast courier dispatch.
             </p>
-            <Link href="/customer/book-parcel">
-              <Button size="sm" className="gap-1.5 mt-2">
-                <Plus className="w-4 h-4" /> Book a Parcel
+            {isSuspended ? (
+              <Button
+                size="sm"
+                disabled
+                className="gap-1.5 mt-2 opacity-60 cursor-not-allowed"
+                title="Account suspended: Booking is disabled"
+              >
+                <Plus className="w-4 h-4" /> Book a Parcel (Suspended)
               </Button>
-            </Link>
+            ) : (
+              <Link href="/customer/book-parcel">
+                <Button size="sm" className="gap-1.5 mt-2">
+                  <Plus className="w-4 h-4" /> Book a Parcel
+                </Button>
+              </Link>
+            )}
           </div>
         ) : (
           <div className="border rounded-xl bg-card overflow-hidden shadow-xs divide-y">

@@ -17,6 +17,7 @@ import {
   useRespondAssignment,
   useUpdateTaskStatus,
 } from "@/hooks/courier.hook";
+import { useGetMe } from "@/hooks/auth.hook";
 import {
   Package,
   MapPin,
@@ -44,6 +45,10 @@ interface Props {
 }
 
 const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
+  const { data: userData } = useGetMe();
+  const isSuspended =
+    userData?.data?.status === "SUSPENDED" || userData?.data?.status === "BLOCKED";
+
   // 1. Fetch targeted single assignment data (fallback to list query)
   const { data: singleData, isLoading: singleLoading } = useGetCourierAssignment(selectedId);
   const { data: listData } = useGetMyAssignments(status);
@@ -701,7 +706,16 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
         )}
 
         {/* Footer Actions Based on Current Status */}
-        <SheetFooter className="p-0 pt-4 border-t mt-6">
+        <SheetFooter className="p-0 pt-4 border-t mt-6 flex flex-col gap-2">
+          {isSuspended && (
+            <div className="w-full p-2.5 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-[11px] flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <span>
+                <strong>Account Suspended:</strong> Accepting tasks or picking up parcels is disabled. Only in-progress deliveries can be completed.
+              </span>
+            </div>
+          )}
+
           {selectedTask && (
             <>
               {/* 1. COURIER_ASSIGNED (Pending Courier Decision) */}
@@ -719,11 +733,16 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                     variant="default"
                     className="w-full bg-green-600 hover:bg-green-700 text-white"
                     onClick={handleAccept}
-                    disabled={respondPending}
+                    disabled={respondPending || isSuspended}
+                    title={isSuspended ? "Account suspended: Cannot accept new delivery tasks" : undefined}
                   >
                     {respondPending ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Accepting...
+                      </>
+                    ) : isSuspended ? (
+                      <>
+                        <AlertTriangle className="w-4 h-4 mr-1.5 text-amber-400" /> Accept (Suspended)
                       </>
                     ) : (
                       <>
@@ -742,11 +761,16 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                     variant="default"
                     className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold"
                     onClick={() => handleStatusUpdate("PICKED_UP")}
-                    disabled={updatePending}
+                    disabled={updatePending || isSuspended}
+                    title={isSuspended ? "Account suspended: Cannot pick up parcels" : undefined}
                   >
                     {updatePending ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating Status...
+                      </>
+                    ) : isSuspended ? (
+                      <>
+                        <AlertTriangle className="w-4 h-4 mr-2 text-amber-400" /> Pickup Disabled (Suspended)
                       </>
                     ) : (
                       <>

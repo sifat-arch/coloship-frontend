@@ -10,6 +10,7 @@ import {
   CustomerShipmentItem,
   CustomerShipmentParams,
   CancelShipmentPayload,
+  PaymentDetails,
 } from "@/types/customer.type";
 
 // ১. সেভ করা সকল ঠিকানা আনা
@@ -77,6 +78,13 @@ export const cancelShipment = (id: string, payload?: CancelShipmentPayload) => {
 // ৮. ট্র্যাকিং নম্বর দিয়ে পার্সেল ট্র্যাক করা
 export const trackShipment = (trackingNumber: string) => {
   return apiClient<apiResponse<CustomerShipmentItem>>(`/shipments/track/${trackingNumber}`, {
+    method: "GET",
+  });
+};
+
+// ৯. পেমেন্টের বিস্তারিত আনা
+export const getPaymentDetails = (paymentId: string) => {
+  return apiClient<apiResponse<PaymentDetails>>(`/payments/details/${paymentId}`, {
     method: "GET",
   });
 };

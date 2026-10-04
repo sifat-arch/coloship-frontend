@@ -7,6 +7,7 @@ import {
   useGetCourierDashboardStats,
   useToggleAvailability,
 } from "@/hooks/courier.hook";
+import { useGetMe } from "@/hooks/auth.hook";
 import {
   Truck,
   CheckCircle2,
@@ -14,10 +15,15 @@ import {
   PackageCheck,
   Radio,
   Power,
+  AlertTriangle,
 } from "lucide-react";
 import Link from "next/link";
 
 const CourierOverviewStats = () => {
+  const { data: userData } = useGetMe();
+  const isSuspended =
+    userData?.data?.status === "SUSPENDED" || userData?.data?.status === "BLOCKED";
+
   const { data, isLoading } = useGetCourierDashboardStats();
   const stats = data?.data;
 
@@ -88,41 +94,64 @@ const CourierOverviewStats = () => {
         <div className="flex items-center gap-3.5">
           <div
             className={`w-3.5 h-3.5 rounded-full ${
-              isOnline ? "bg-green-500 animate-pulse ring-4 ring-green-100" : "bg-gray-400"
+              isSuspended
+                ? "bg-amber-500 ring-4 ring-amber-100"
+                : isOnline
+                  ? "bg-green-500 animate-pulse ring-4 ring-green-100"
+                  : "bg-gray-400"
             }`}
           />
           <div>
             <h3 className="text-base font-semibold flex items-center gap-2">
               Duty Status:{" "}
-              <span className={isOnline ? "text-green-600" : "text-muted-foreground"}>
-                {isOnline ? "Online (Available for tasks)" : "Offline (Not taking tasks)"}
+              <span
+                className={
+                  isSuspended
+                    ? "text-amber-600"
+                    : isOnline
+                      ? "text-green-600"
+                      : "text-muted-foreground"
+                }
+              >
+                {isSuspended
+                  ? "Suspended (Restricted)"
+                  : isOnline
+                    ? "Online (Available for tasks)"
+                    : "Offline (Not taking tasks)"}
               </span>
             </h3>
             <p className="text-xs text-muted-foreground">
-              {isOnline
-                ? "You can receive parcel assignments from the central admin hub."
-                : "Toggle duty ON to start receiving new delivery tasks."}
+              {isSuspended
+                ? "Your courier account is suspended. You cannot switch to Online mode or take new delivery tasks."
+                : isOnline
+                  ? "You can receive parcel assignments from the central admin hub."
+                  : "Toggle duty ON to start receiving new delivery tasks."}
             </p>
           </div>
         </div>
 
         <Button
           onClick={handleToggle}
-          disabled={togglePending}
+          disabled={togglePending || isSuspended}
           variant={isOnline ? "outline" : "default"}
           size="sm"
+          title={isSuspended ? "Account suspended: Cannot change duty status" : undefined}
           className={`gap-2 ${
-            !isOnline
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            isSuspended
+              ? "opacity-60 cursor-not-allowed bg-muted text-muted-foreground"
+              : !isOnline
+                ? "bg-green-600 hover:bg-green-700 text-white"
+                : "border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
           }`}
         >
           <Power className="w-4 h-4" />
           {togglePending
             ? "Updating..."
-            : isOnline
-              ? "Go Offline"
-              : "Go Online"}
+            : isSuspended
+              ? "Duty Disabled"
+              : isOnline
+                ? "Go Offline"
+                : "Go Online"}
         </Button>
       </div>
 

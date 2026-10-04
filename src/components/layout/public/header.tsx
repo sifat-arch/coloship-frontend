@@ -40,7 +40,7 @@ const Header = () => {
           description: "Logout successfully",
         });
 
-        queryClient.removeQueries({ queryKey: ["user"] });
+        queryClient.clear();
       },
       onError: () => {
         toast.add({
