@@ -1,11 +1,9 @@
-import React from "react";
+import MarketingFooter from "@/components/marketing-components/home/footer";
 
+// The public (marketing) layout keeps importing this path; the actual footer
+// design lives in the marketing components folder.
 const Footer = () => {
-  return (
-    <div className="w-full h-16 border-t flex justify-center items-center">
-      <h1>copyright:Coloship</h1>
-    </div>
-  );
+  return <MarketingFooter />;
 };
 
 export default Footer;

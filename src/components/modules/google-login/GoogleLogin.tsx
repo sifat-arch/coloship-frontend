@@ -20,13 +20,22 @@ const GoogleLoginComponent = () => {
     googleLogin(
       { idToken },
       {
-        onSuccess: () => {
+        onSuccess: (res: any) => {
           toast.add({
             title: "Logged in with google successfully",
             description: "Welcome Back",
             type: "success",
           });
-          router.push("/");
+          const userRole = res?.data?.user?.role;
+          if (userRole === "ADMIN") {
+            router.push("/admin");
+          } else if (userRole === "COURIER") {
+            router.push("/courier");
+          } else if (userRole === "CUSTOMER") {
+            router.push("/customer");
+          } else {
+            router.push("/");
+          }
         },
         onError: (err) => {
           toast.add({

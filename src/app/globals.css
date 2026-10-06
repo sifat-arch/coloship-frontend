@@ -124,10 +124,168 @@
   body {
     @apply bg-background text-foreground;
   }
-  button:not(:disabled), [role="button"]:not(:disabled) {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
     cursor: pointer;
   }
   html {
     @apply font-sans;
   }
+}
+
+@keyframes hero-shimmer {
+  0% {
+    transform: translateX(-150%);
+  }
+  50%,
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+@keyframes hero-float-slow {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes hero-float-reverse {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(8px);
+  }
+}
+
+@keyframes hero-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.06);
+  }
+}
+
+/* Smooth Continuous Moving Gradient Canvas */
+@keyframes moving-gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Floating orb drift in visible orbit */
+@keyframes orb-float-1 {
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(60px, -40px) scale(1.15);
+  }
+  66% {
+    transform: translate(-50px, 30px) scale(0.9);
+  }
+}
+
+@keyframes orb-float-2 {
+  0%,
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(-70px, 50px) scale(1.18);
+  }
+  66% {
+    transform: translate(45px, -35px) scale(0.88);
+  }
+}
+
+.animate-hero-shimmer {
+  animation: hero-shimmer 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-hero-float {
+  animation: hero-float-slow 6s ease-in-out infinite;
+}
+
+.animate-hero-float-reverse {
+  animation: hero-float-reverse 5s ease-in-out infinite;
+}
+
+.animate-moving-gradient {
+  background-size: 200% 200%;
+  animation: moving-gradient 12s ease infinite;
+}
+
+.animate-orb-1 {
+  animation: orb-float-1 10s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-orb-2 {
+  animation: orb-float-2 13s ease-in-out infinite;
+  will-change: transform;
+}
+
+/* Continuous Marquee Animations */
+@keyframes marquee-forward {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0%);
+  }
+}
+
+@keyframes marquee-backward {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-forward {
+  animation: marquee-forward 35s linear infinite;
+  will-change: transform;
+}
+
+.animate-marquee-backward {
+  animation: marquee-backward 35s linear infinite;
+  will-change: transform;
+}
+
+.pause-on-hover:hover {
+  animation-play-state: paused;
+}
+
+/* Continuous moving progress beam */
+@keyframes beam-slide {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+.animate-beam-slide {
+  animation: beam-slide 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  will-change: transform;
 }

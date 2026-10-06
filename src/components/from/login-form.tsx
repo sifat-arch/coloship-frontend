@@ -44,14 +44,23 @@ const LoginForm = () => {
       };
 
       login(loginData, {
-        onSuccess: (res) => {
+        onSuccess: (res: any) => {
           queryClient.clear();
           toast.add({
             title: "Login Successful",
             description: "Welcome Back",
             type: "success",
           });
-          router.push("/");
+          const userRole = res?.data?.user?.role;
+          if (userRole === "ADMIN") {
+            router.push("/admin");
+          } else if (userRole === "COURIER") {
+            router.push("/courier");
+          } else if (userRole === "CUSTOMER") {
+            router.push("/customer");
+          } else {
+            router.push("/");
+          }
         },
         onError: (error) => {
           toast.add({
