@@ -44,20 +44,39 @@ const CourierApprovalTable = ({
           </TableHeader>
           <TableBody>
             {couriers.length > 0 ? (
-              couriers.map((courier) => (
-                <TableRow key={courier.id}>
-                  <TableCell className="font-medium">
-                    {" "}
-                    {courier.user.name}{" "}
+              couriers.map((courier, idx) => (
+                <TableRow
+                  key={courier.id}
+                  className="animate-table-row transition-colors hover:bg-primary/[0.04]"
+                  style={{ animationDelay: `${idx * 40}ms` }}
+                >
+                  <TableCell className="font-semibold text-foreground">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs ring-1 ring-primary/20">
+                        {courier.user?.name?.charAt(0) || "C"}
+                      </div>
+                      <span>{courier.user?.name}</span>
+                    </div>
                   </TableCell>
-                  <TableCell> {courier.licenseNumber} </TableCell>
-                  <TableCell>{courier.user.email} </TableCell>
-                  <TableCell> {courier.phone} </TableCell>
-                  <TableCell> {courier.vehicleType} </TableCell>
+                  <TableCell className="font-mono text-xs text-muted-foreground">
+                    {courier.licenseNumber}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-xs">
+                    {courier.user?.email}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {courier.phone}
+                  </TableCell>
+                  <TableCell>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-muted text-muted-foreground border">
+                      {courier.vehicleType}
+                    </span>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="outline"
                       size="sm"
+                      className="hover:border-primary/50 hover:text-primary transition-all text-xs h-8"
                       onClick={() => handleReview(courier.id)}
                     >
                       Review

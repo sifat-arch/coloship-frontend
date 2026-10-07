@@ -1,6 +1,14 @@
+export enum VehicleType {
+  BIKE = "BIKE",
+  BICYCLE = "BICYCLE",
+  MOTORCYCLE = "MOTORCYCLE",
+  VAN = "VAN",
+  TRUCK = "TRUCK",
+}
+
 export type courierApplicationData = {
   phone: string;
-  vehicleType: string;
+  vehicleType: VehicleType | string;
   nidNumber: string;
   vehicleNumber: string;
   licenseNumber: string;
@@ -11,5 +19,3 @@ export type courierApplicationPayload = {
   resume: File;
   profileImage: File;
 };
-
-

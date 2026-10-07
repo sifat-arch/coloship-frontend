@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -50,6 +50,16 @@ export default function ShipmentDetailsSheet({
   const { data, isLoading } = useGetShipmentDetails(selectedId);
   const shipment = data?.data;
 
+  // Cache shipment data to preserve content during Framer Motion slide-out animation
+  const [cachedShipment, setCachedShipment] = useState(shipment);
+  useEffect(() => {
+    if (shipment) {
+      setCachedShipment(shipment);
+    }
+  }, [shipment]);
+
+  const activeShipment = shipment || cachedShipment;
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
@@ -60,7 +70,7 @@ export default function ShipmentDetailsSheet({
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const isCancellable = shipment?.status === "CREATED";
+  const isCancellable = activeShipment?.status === "CREATED";
 
   return (
     <>
@@ -73,21 +83,21 @@ export default function ShipmentDetailsSheet({
                 <Package className="w-4 h-4" />
                 Shipment Details
               </span>
-              {shipment && <ShipmentStatusBadge status={shipment.status} />}
+              {activeShipment && <ShipmentStatusBadge status={activeShipment.status} />}
             </div>
 
-            {shipment && (
+            {activeShipment && (
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Tracking Number</p>
                   <p className="text-xl font-bold font-mono tracking-tight text-foreground">
-                    {shipment.trackingNumber}
+                    {activeShipment.trackingNumber}
                   </p>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleCopy(shipment.trackingNumber)}
+                  onClick={() => handleCopy(activeShipment.trackingNumber)}
                   className="gap-1.5 h-8 text-xs"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -99,12 +109,12 @@ export default function ShipmentDetailsSheet({
 
           {/* Body Content */}
           <div className="p-6 space-y-6 flex-1">
-            {isLoading ? (
+            {isLoading && !activeShipment ? (
               <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                 <Loader2 className="w-7 h-7 animate-spin text-primary" />
                 <p className="text-sm">Loading parcel journey...</p>
               </div>
-            ) : !shipment ? (
+            ) : !activeShipment ? (
               <div className="text-center py-12 text-muted-foreground text-sm">
                 Shipment not found or failed to load.
               </div>
@@ -135,46 +145,46 @@ export default function ShipmentDetailsSheet({
                       <Truck className="w-3.5 h-3.5" /> Delivery Speed
                     </span>
                     <p className="font-semibold text-foreground">
-                      {shipment.deliveryType === "EXPRESS" ? "⚡ Express (24h)" : "Standard (2-3 Days)"}
+                      {activeShipment.deliveryType === "EXPRESS" ? "⚡ Express (24h)" : "Standard (2-3 Days)"}
                     </p>
                   </div>
                   <div className="p-3 rounded-lg border bg-card space-y-1">
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <Package className="w-3.5 h-3.5" /> Weight
                     </span>
-                    <p className="font-semibold text-foreground">{shipment.weight} KG</p>
+                    <p className="font-semibold text-foreground">{activeShipment.weight} KG</p>
                   </div>
                   <div className="p-3 rounded-lg border bg-card space-y-1">
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <DollarSign className="w-3.5 h-3.5" /> Delivery Fee
                     </span>
-                    <p className="font-semibold text-foreground">৳{shipment.deliveryFee}</p>
+                    <p className="font-semibold text-foreground">৳{activeShipment.deliveryFee}</p>
                   </div>
                   <div className="p-3 rounded-lg border bg-card space-y-1">
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                       <DollarSign className="w-3.5 h-3.5" /> COD Collection
                     </span>
-                    <p className="font-semibold text-foreground">৳{shipment.codAmount || 0}</p>
+                    <p className="font-semibold text-foreground">৳{activeShipment.codAmount || 0}</p>
                   </div>
                 </div>
 
-                {shipment.parcelDescription && (
+                {activeShipment.parcelDescription && (
                   <div className="p-3.5 bg-muted/40 rounded-lg border text-xs space-y-1">
                     <span className="font-medium text-muted-foreground flex items-center gap-1.5">
                       <FileText className="w-3.5 h-3.5" /> Description & Instructions
                     </span>
-                    <p className="text-foreground">{shipment.parcelDescription}</p>
+                    <p className="text-foreground">{activeShipment.parcelDescription}</p>
                   </div>
                 )}
 
                 {/* Payment & Refund Information */}
-                {shipment.payment && (
+                {activeShipment.payment && (
                   <div className="space-y-3">
                     <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                       <CreditCard className="w-4 h-4 text-primary" /> Payment & Refund Details
                     </h4>
 
-                    {shipment.payment.status === "REFUNDED" ? (
+                    {activeShipment.payment.status === "REFUNDED" ? (
                       <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 dark:bg-emerald-950/20 space-y-2.5">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
@@ -190,17 +200,17 @@ export default function ShipmentDetailsSheet({
                           <div>
                             <span className="text-muted-foreground block text-[11px]">Refunded Amount</span>
                             <span className="font-bold text-foreground">
-                              ৳{shipment.payment.refundAmount || shipment.payment.amount}
+                              ৳{activeShipment.payment.refundAmount || activeShipment.payment.amount}
                             </span>
                           </div>
-                          {shipment.payment.refundTrxId && (
+                          {activeShipment.payment.refundTrxId && (
                             <div>
                               <span className="text-muted-foreground block text-[11px]">Refund TrxID</span>
                               <div className="flex items-center gap-1 font-mono font-medium text-foreground">
-                                <span>{shipment.payment.refundTrxId}</span>
+                                <span>{activeShipment.payment.refundTrxId}</span>
                                 <button
                                   type="button"
-                                  onClick={() => handleCopy(shipment.payment?.refundTrxId || "")}
+                                  onClick={() => handleCopy(activeShipment.payment?.refundTrxId || "")}
                                   className="text-muted-foreground hover:text-foreground"
                                   title="Copy Refund TrxID"
                                 >
@@ -209,11 +219,11 @@ export default function ShipmentDetailsSheet({
                               </div>
                             </div>
                           )}
-                          {shipment.payment.refundedAt && (
+                          {activeShipment.payment.refundedAt && (
                             <div className="col-span-2">
                               <span className="text-muted-foreground block text-[11px]">Refund Date</span>
                               <span className="text-foreground">
-                                {new Date(shipment.payment.refundedAt).toLocaleString()}
+                                {new Date(activeShipment.payment.refundedAt).toLocaleString()}
                               </span>
                             </div>
                           )}
@@ -224,13 +234,13 @@ export default function ShipmentDetailsSheet({
                         <div className="flex items-center justify-between">
                           <span className="text-muted-foreground">Payment Method</span>
                           <span className="font-semibold text-foreground">
-                            {shipment.payment.method === "BKASH" ? "bKash Online Gateway" : "Cash on Delivery (COD)"}
+                            {activeShipment.payment.method === "BKASH" ? "bKash Online Gateway" : "Cash on Delivery (COD)"}
                           </span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-muted-foreground">Payment Status</span>
                           <span className="font-semibold text-foreground capitalize">
-                            {shipment.payment.status.toLowerCase()}
+                            {activeShipment.payment.status.toLowerCase()}
                           </span>
                         </div>
                       </div>
@@ -252,14 +262,14 @@ export default function ShipmentDetailsSheet({
                       <div className="flex items-center justify-between text-xs font-semibold text-amber-600 dark:text-amber-400">
                         <span>Pickup Location</span>
                         <span className="text-[11px] text-muted-foreground font-normal">
-                          {shipment.pickupAddress?.phone}
+                          {activeShipment.pickupAddress?.phone}
                         </span>
                       </div>
                       <p className="text-xs font-medium text-foreground">
-                        {shipment.pickupAddress?.recipientName}
+                        {activeShipment.pickupAddress?.recipientName}
                       </p>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        {shipment.pickupAddress?.addressLine}, {shipment.pickupAddress?.area}, {shipment.pickupAddress?.city}
+                        {activeShipment.pickupAddress?.addressLine}, {activeShipment.pickupAddress?.area}, {activeShipment.pickupAddress?.city}
                       </p>
                     </div>
 
@@ -268,14 +278,14 @@ export default function ShipmentDetailsSheet({
                       <div className="flex items-center justify-between text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                         <span>Delivery Destination</span>
                         <span className="text-[11px] text-muted-foreground font-normal">
-                          {shipment.deliveryAddress?.phone}
+                          {activeShipment.deliveryAddress?.phone}
                         </span>
                       </div>
                       <p className="text-xs font-medium text-foreground">
-                        {shipment.deliveryAddress?.recipientName}
+                        {activeShipment.deliveryAddress?.recipientName}
                       </p>
                       <p className="text-xs text-muted-foreground leading-relaxed">
-                        {shipment.deliveryAddress?.addressLine}, {shipment.deliveryAddress?.area}, {shipment.deliveryAddress?.city}
+                        {activeShipment.deliveryAddress?.addressLine}, {activeShipment.deliveryAddress?.area}, {activeShipment.deliveryAddress?.city}
                       </p>
                     </div>
                   </div>
@@ -289,9 +299,9 @@ export default function ShipmentDetailsSheet({
                     <Navigation className="w-4 h-4 text-primary" /> Journey Timeline
                   </h4>
 
-                  {shipment.trackingEvents && shipment.trackingEvents.length > 0 ? (
+                  {activeShipment.trackingEvents && activeShipment.trackingEvents.length > 0 ? (
                     <div className="relative pl-6 space-y-4 border-l-2 border-primary/20 ml-2">
-                      {shipment.trackingEvents.map((evt, idx) => (
+                      {activeShipment.trackingEvents.map((evt, idx) => (
                         <div key={evt.id || idx} className="relative group">
                           {/* Circle marker */}
                           <div
@@ -339,11 +349,11 @@ export default function ShipmentDetailsSheet({
       </Sheet>
 
       {/* Cancel Dialog */}
-      {shipment && (
+      {activeShipment && (
         <CancelShipmentDialog
           open={isCancelDialogOpen}
           onOpenChange={setIsCancelDialogOpen}
-          shipment={shipment}
+          shipment={activeShipment}
           onSuccess={() => {
             onClose();
           }}

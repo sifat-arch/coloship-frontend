@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -55,6 +55,16 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
 
   const selectedTask = singleData?.data || listData?.data?.find((t) => t.id === selectedId);
 
+  const [cachedTask, setCachedTask] = useState(selectedTask);
+
+  useEffect(() => {
+    if (selectedTask) {
+      setCachedTask(selectedTask);
+    }
+  }, [selectedTask]);
+
+  const activeTask = selectedTask || cachedTask;
+
   // 2. Mutation hooks
   const { mutate: respondTask, isPending: respondPending } = useRespondAssignment();
   const { mutate: updateStatus, isPending: updatePending } = useUpdateTaskStatus();
@@ -70,7 +80,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
   const [deliveryNote, setDeliveryNote] = useState("");
   const [showTrackingHistory, setShowTrackingHistory] = useState(false);
 
-  if (!selectedId) {
+  if (!selectedId && !cachedTask) {
     return null;
   }
 
@@ -185,32 +195,32 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
 
   // Check if accepted previously based on tracking events
   const isAccepted = Boolean(
-    selectedTask?.trackingEvents?.some(
+    activeTask?.trackingEvents?.some(
       (e) =>
         e.description?.toLowerCase().includes("task accepted") ||
         e.description?.toLowerCase().includes("accepted by courier"),
     ),
   );
 
-  const isDelivered = selectedTask?.status === "DELIVERED";
-  const isDeliveryFailed = selectedTask?.status === "DELIVERY_FAILED";
-  const isCancelled = selectedTask?.status === "CANCELLED" || selectedTask?.status === "RETURNED";
+  const isDelivered = activeTask?.status === "DELIVERED";
+  const isDeliveryFailed = activeTask?.status === "DELIVERY_FAILED";
+  const isCancelled = activeTask?.status === "CANCELLED" || activeTask?.status === "RETURNED";
   const isTerminal = isDelivered || isDeliveryFailed || isCancelled;
 
   // Failure event if any
-  const latestFailureEvent = selectedTask?.trackingEvents?.find(
+  const latestFailureEvent = activeTask?.trackingEvents?.find(
     (e) => e.status === "DELIVERY_FAILED",
   );
 
   return (
-    <Sheet open={Boolean(selectedId)} onOpenChange={onClose}>
+    <Sheet open={Boolean(selectedId)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto flex flex-col justify-between p-6">
-        {singleLoading && !selectedTask ? (
+        {singleLoading && !activeTask ? (
           <div className="flex flex-col items-center justify-center h-96 space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
             <p className="text-sm text-muted-foreground">Loading task details...</p>
           </div>
-        ) : !selectedTask ? (
+        ) : !activeTask ? (
           <div className="flex flex-col items-center justify-center h-96 space-y-3">
             <Package className="w-10 h-10 text-muted-foreground" />
             <p className="text-sm text-muted-foreground">Task not found or no longer assigned.</p>
@@ -231,7 +241,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
               <SheetDescription>
                 Tracking ID:{" "}
                 <span className="font-mono font-bold text-foreground">
-                  #{selectedTask.trackingNumber}
+                  #{activeTask.trackingNumber}
                 </span>
               </SheetDescription>
             </SheetHeader>
@@ -243,22 +253,22 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                 <div className="flex items-center gap-1.5 mt-1">
                   <span
                     className={`inline-block px-2.5 py-0.5 text-xs font-semibold rounded-full border ${
-                      selectedTask.status === "DELIVERED"
+                      activeTask.status === "DELIVERED"
                         ? "bg-green-100 text-green-700 border-green-200"
-                        : selectedTask.status === "DELIVERY_FAILED"
+                        : activeTask.status === "DELIVERY_FAILED"
                           ? "bg-red-100 text-red-700 border-red-200"
-                          : selectedTask.status === "OUT_FOR_DELIVERY"
+                          : activeTask.status === "OUT_FOR_DELIVERY"
                             ? "bg-indigo-100 text-indigo-700 border-indigo-200"
-                            : selectedTask.status === "IN_TRANSIT"
+                            : activeTask.status === "IN_TRANSIT"
                               ? "bg-purple-100 text-purple-700 border-purple-200"
-                              : selectedTask.status === "PICKED_UP"
+                              : activeTask.status === "PICKED_UP"
                                 ? "bg-blue-100 text-blue-700 border-blue-200"
                                 : "bg-amber-100 text-amber-700 border-amber-200"
                     }`}
                   >
-                    {selectedTask.status.replace(/_/g, " ")}
+                    {activeTask.status.replace(/_/g, " ")}
                   </span>
-                  {selectedTask.status === "COURIER_ASSIGNED" && isAccepted && (
+                  {activeTask.status === "COURIER_ASSIGNED" && isAccepted && (
                     <span className="px-2 py-0.5 text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
                       Accepted
                     </span>
@@ -269,7 +279,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
               <div className="text-right">
                 <p className="text-xs text-muted-foreground font-medium">Delivery Service</p>
                 <span className="text-sm font-semibold capitalize flex items-center justify-end gap-1 mt-0.5">
-                  {selectedTask.deliveryType === "EXPRESS" ? (
+                  {activeTask.deliveryType === "EXPRESS" ? (
                     <span className="text-amber-600 font-bold">⚡ Express</span>
                   ) : (
                     "Standard"
@@ -279,7 +289,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
             </div>
 
             {/* Status Specific Operational Banners */}
-            {selectedTask.status === "COURIER_ASSIGNED" && !isAccepted && (
+            {activeTask.status === "COURIER_ASSIGNED" && !isAccepted && (
               <div className="p-3.5 rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-950/30 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-2.5">
                 <Clock className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 <div>
@@ -291,7 +301,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
               </div>
             )}
 
-            {selectedTask.status === "COURIER_ASSIGNED" && isAccepted && (
+            {activeTask.status === "COURIER_ASSIGNED" && isAccepted && (
               <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-950/30 text-blue-900 dark:text-blue-200 text-xs flex items-start gap-2.5">
                 <CheckCircle2 className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <div>
@@ -303,14 +313,14 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
               </div>
             )}
 
-            {selectedTask.status === "PICKED_UP" && (
+            {activeTask.status === "PICKED_UP" && (
               <div className="p-3.5 rounded-xl border border-blue-200 bg-blue-50/70 text-blue-900 dark:text-blue-200 text-xs flex items-start gap-2.5">
                 <Truck className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold">Parcel Collected from Sender</p>
                   <p className="mt-0.5 text-blue-700 dark:text-blue-300">
-                    {selectedTask.pickedUpAt
-                      ? `Collected at ${new Date(selectedTask.pickedUpAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. `
+                    {activeTask.pickedUpAt
+                      ? `Collected at ${new Date(activeTask.pickedUpAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}. `
                       : ""}
                     Start transit when ready to move towards destination.
                   </p>
@@ -318,7 +328,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
               </div>
             )}
 
-            {selectedTask.status === "IN_TRANSIT" && (
+            {activeTask.status === "IN_TRANSIT" && (
               <div className="p-3.5 rounded-xl border border-purple-200 bg-purple-50/70 text-purple-900 dark:text-purple-200 text-xs flex items-start gap-2.5">
                 <Navigation className="w-4 h-4 text-purple-600 shrink-0 mt-0.5" />
                 <div>
@@ -330,7 +340,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
               </div>
             )}
 
-            {selectedTask.status === "OUT_FOR_DELIVERY" && (
+            {activeTask.status === "OUT_FOR_DELIVERY" && (
               <div className="p-3.5 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-900 dark:text-indigo-200 text-xs flex items-start gap-2.5">
                 <Navigation className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
                 <div>
@@ -349,9 +359,9 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                   <p className="font-semibold">Delivery Successfully Completed</p>
                   <p className="mt-0.5 text-green-700">
                     Delivered on{" "}
-                    {selectedTask.deliveredAt
-                      ? new Date(selectedTask.deliveredAt).toLocaleString()
-                      : new Date(selectedTask.updatedAt).toLocaleString()}
+                    {activeTask.deliveredAt
+                      ? new Date(activeTask.deliveredAt).toLocaleString()
+                      : new Date(activeTask.updatedAt).toLocaleString()}
                     .
                   </p>
                 </div>
@@ -383,7 +393,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
             )}
 
             {/* COD Cash Collection Alert */}
-            {Number(selectedTask.codAmount) > 0 && (
+            {Number(activeTask.codAmount) > 0 && (
               <div className="p-4 rounded-xl border border-amber-300 bg-amber-50/90 text-amber-900 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-amber-200 rounded-lg text-amber-900">
@@ -393,11 +403,11 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                     <p className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
                       Collect Cash On Delivery (COD)
                     </p>
-                    <p className="text-lg font-black text-amber-950">৳{selectedTask.codAmount}</p>
+                    <p className="text-lg font-black text-amber-950">৳{activeTask.codAmount}</p>
                     <p className="text-[11px] text-amber-700">
                       Payment Status:{" "}
                       <span className="font-semibold uppercase">
-                        {selectedTask.payment?.status || "PENDING"}
+                        {activeTask.payment?.status || "PENDING"}
                       </span>
                     </p>
                   </div>
@@ -421,20 +431,20 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-bold text-blue-600 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-blue-600" />
-                      Pickup Origin: {selectedTask.pickupAddress?.recipientName}
+                      Pickup Origin: {activeTask.pickupAddress?.recipientName}
                     </p>
-                    {selectedTask.pickupAddress?.phone && (
+                    {activeTask.pickupAddress?.phone && (
                       <a
-                        href={`tel:${selectedTask.pickupAddress.phone}`}
+                        href={`tel:${activeTask.pickupAddress.phone}`}
                         className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline bg-primary/5 px-2 py-0.5 rounded border border-primary/20"
                       >
-                        <Phone className="w-3 h-3" /> Call {selectedTask.pickupAddress.phone}
+                        <Phone className="w-3 h-3" /> Call {activeTask.pickupAddress.phone}
                       </a>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground pl-3.5 border-l-2 border-blue-200">
-                    {selectedTask.pickupAddress?.addressLine}, {selectedTask.pickupAddress?.area},{" "}
-                    {selectedTask.pickupAddress?.city}
+                    {activeTask.pickupAddress?.addressLine}, {activeTask.pickupAddress?.area},{" "}
+                    {activeTask.pickupAddress?.city}
                   </p>
                 </div>
 
@@ -443,20 +453,20 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                   <div className="flex items-center justify-between">
                     <p className="text-xs font-bold text-green-600 flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-green-600" />
-                      Delivery Destination: {selectedTask.deliveryAddress?.recipientName}
+                      Delivery Destination: {activeTask.deliveryAddress?.recipientName}
                     </p>
-                    {selectedTask.deliveryAddress?.phone && (
+                    {activeTask.deliveryAddress?.phone && (
                       <a
-                        href={`tel:${selectedTask.deliveryAddress.phone}`}
+                        href={`tel:${activeTask.deliveryAddress.phone}`}
                         className="inline-flex items-center gap-1 text-xs text-primary font-medium hover:underline bg-primary/5 px-2 py-0.5 rounded border border-primary/20"
                       >
-                        <Phone className="w-3 h-3" /> Call {selectedTask.deliveryAddress.phone}
+                        <Phone className="w-3 h-3" /> Call {activeTask.deliveryAddress.phone}
                       </a>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground pl-3.5 border-l-2 border-green-200">
-                    {selectedTask.deliveryAddress?.addressLine}, {selectedTask.deliveryAddress?.area},{" "}
-                    {selectedTask.deliveryAddress?.city}
+                    {activeTask.deliveryAddress?.addressLine}, {activeTask.deliveryAddress?.area},{" "}
+                    {activeTask.deliveryAddress?.city}
                   </p>
                 </div>
               </div>
@@ -468,10 +478,10 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                     <User className="w-3.5 h-3.5 text-primary" /> Customer Account
                   </div>
                   <p className="text-xs font-semibold text-foreground truncate">
-                    {selectedTask.customer?.name || "Customer"}
+                    {activeTask.customer?.name || "Customer"}
                   </p>
                   <p className="text-[11px] text-muted-foreground truncate">
-                    {selectedTask.customer?.email}
+                    {activeTask.customer?.email}
                   </p>
                 </div>
 
@@ -480,29 +490,29 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                     <div className="flex items-center gap-1 text-xs text-muted-foreground font-medium">
                       <Weight className="w-3.5 h-3.5" /> Weight
                     </div>
-                    <p className="text-sm font-bold mt-0.5">{selectedTask.weight} kg</p>
+                    <p className="text-sm font-bold mt-0.5">{activeTask.weight} kg</p>
                   </div>
                   <div className="text-right">
                     <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground font-medium">
                       <DollarSign className="w-3.5 h-3.5" /> Delivery Fee
                     </div>
-                    <p className="text-sm font-bold mt-0.5 text-primary">৳{selectedTask.deliveryFee}</p>
+                    <p className="text-sm font-bold mt-0.5 text-primary">৳{activeTask.deliveryFee}</p>
                   </div>
                 </div>
               </div>
 
-              {selectedTask.parcelDescription && (
+              {activeTask.parcelDescription && (
                 <div className="p-3 border rounded-xl bg-muted/20 text-xs space-y-1">
                   <div className="flex items-center gap-1.5 font-medium text-muted-foreground">
                     <FileText className="w-3.5 h-3.5" /> Parcel Description
                   </div>
-                  <p className="text-foreground">{selectedTask.parcelDescription}</p>
+                  <p className="text-foreground">{activeTask.parcelDescription}</p>
                 </div>
               )}
             </div>
 
             {/* Progress Input Controls for Active States */}
-            {!isTerminal && (selectedTask.status !== "COURIER_ASSIGNED" || isAccepted) && (
+            {!isTerminal && (activeTask.status !== "COURIER_ASSIGNED" || isAccepted) && (
               <div className="p-3.5 rounded-xl border bg-muted/20 space-y-2.5">
                 <div className="flex items-center gap-2 text-xs font-semibold">
                   <Navigation className="w-3.5 h-3.5 text-primary" /> Optional Progress Update Details
@@ -661,7 +671,7 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
             )}
 
             {/* Tracking Events Timeline Accordion */}
-            {selectedTask.trackingEvents && selectedTask.trackingEvents.length > 0 && (
+            {activeTask.trackingEvents && activeTask.trackingEvents.length > 0 && (
               <div className="pt-2 border-t">
                 <button
                   type="button"
@@ -670,14 +680,14 @@ const CourierTaskSheet = ({ selectedId, onClose, status }: Props) => {
                 >
                   <span className="flex items-center gap-1.5">
                     <History className="w-3.5 h-3.5 text-primary" />
-                    Tracking Journey ({selectedTask.trackingEvents.length} events)
+                    Tracking Journey ({activeTask.trackingEvents.length} events)
                   </span>
                   <span>{showTrackingHistory ? "Hide ▲" : "View ▼"}</span>
                 </button>
 
                 {showTrackingHistory && (
                   <div className="mt-2.5 space-y-2 border rounded-xl p-3 bg-muted/10 max-h-48 overflow-y-auto">
-                    {selectedTask.trackingEvents.map((event: TrackingEventItem, idx: number) => (
+                    {activeTask.trackingEvents.map((event: TrackingEventItem, idx: number) => (
                       <div key={event.id || idx} className="text-xs space-y-0.5 border-b last:border-b-0 pb-1.5">
                         <div className="flex items-center justify-between">
                           <span className="font-semibold text-foreground">

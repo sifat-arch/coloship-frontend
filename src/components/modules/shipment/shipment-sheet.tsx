@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -43,6 +43,16 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
     (shipment) => shipment.id === selectedId,
   );
 
+  const [cachedShipment, setCachedShipment] = useState(selectedShipment);
+
+  useEffect(() => {
+    if (selectedShipment) {
+      setCachedShipment(selectedShipment);
+    }
+  }, [selectedShipment]);
+
+  const activeShipment = selectedShipment || cachedShipment;
+
   // ২. ড্রপডাউনের জন্য অ্যাভেইলেবল কুরিয়ার ফেচ
   const { data: availableCouriersData, isLoading: couriersLoading } =
     useGetAvailableCouriers();
@@ -57,7 +67,7 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
   const { mutate: unassignCourier, isPending: unassignPending } =
     useUnassignCourier();
 
-  if (!selectedShipment) {
+  if (!activeShipment) {
     return null;
   }
 
@@ -117,10 +127,10 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
     });
   };
 
-  const isAssigned = !!selectedShipment.courier;
+  const isAssigned = !!activeShipment.courier;
 
   return (
-    <Sheet open={!!selectedId} onOpenChange={onClose}>
+    <Sheet open={Boolean(selectedId)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto flex flex-col justify-between p-6">
         <div className="space-y-6">
           <SheetHeader className="p-0 pb-4 border-b">
@@ -132,8 +142,8 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
             </div>
             <SheetDescription>
               Tracking ID:{" "}
-              <span className="font-semibold text-foreground">
-                #{selectedShipment.trackingNumber}
+              <span className="font-semibold text-foreground font-mono">
+                #{activeShipment.trackingNumber}
               </span>
             </SheetDescription>
           </SheetHeader>
@@ -145,7 +155,7 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
                 Current Status
               </p>
               <span className="inline-block mt-1 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-primary/10 text-primary">
-                {selectedShipment.status}
+                {activeShipment.status}
               </span>
             </div>
             <div className="text-right">
@@ -153,7 +163,7 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
                 Delivery Type
               </p>
               <span className="text-sm font-semibold capitalize">
-                {selectedShipment.deliveryType.toLowerCase()}
+                {activeShipment.deliveryType.toLowerCase()}
               </span>
             </div>
           </div>
@@ -166,12 +176,12 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
             <div className="grid grid-cols-2 gap-2 text-sm">
               <div>
                 <p className="text-xs text-muted-foreground">Name</p>
-                <p className="font-medium">{selectedShipment.customer.name}</p>
+                <p className="font-medium">{activeShipment.customer.name}</p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Email</p>
                 <p className="font-medium truncate">
-                  {selectedShipment.customer.email}
+                  {activeShipment.customer.email}
                 </p>
               </div>
             </div>
@@ -186,26 +196,26 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
             <div className="space-y-1">
               <p className="text-xs font-semibold text-blue-600 flex items-center gap-1">
                 ● Pickup Address (
-                {selectedShipment.pickupAddress?.recipientName} -{" "}
-                {selectedShipment.pickupAddress?.phone})
+                {activeShipment.pickupAddress?.recipientName} -{" "}
+                {activeShipment.pickupAddress?.phone})
               </p>
               <p className="text-sm text-muted-foreground pl-3 border-l-2 border-blue-200">
-                {selectedShipment.pickupAddress?.addressLine},{" "}
-                {selectedShipment.pickupAddress?.area},{" "}
-                {selectedShipment.pickupAddress?.city}
+                {activeShipment.pickupAddress?.addressLine},{" "}
+                {activeShipment.pickupAddress?.area},{" "}
+                {activeShipment.pickupAddress?.city}
               </p>
             </div>
             {/* Delivery */}
             <div className="space-y-1">
               <p className="text-xs font-semibold text-green-600 flex items-center gap-1">
                 ● Delivery Address (
-                {selectedShipment.deliveryAddress?.recipientName} -{" "}
-                {selectedShipment.deliveryAddress?.phone})
+                {activeShipment.deliveryAddress?.recipientName} -{" "}
+                {activeShipment.deliveryAddress?.phone})
               </p>
               <p className="text-sm text-muted-foreground pl-3 border-l-2 border-green-200">
-                {selectedShipment.deliveryAddress?.addressLine},{" "}
-                {selectedShipment.deliveryAddress?.area},{" "}
-                {selectedShipment.deliveryAddress?.city}
+                {activeShipment.deliveryAddress?.addressLine},{" "}
+                {activeShipment.deliveryAddress?.area},{" "}
+                {activeShipment.deliveryAddress?.city}
               </p>
             </div>
           </div>
@@ -217,7 +227,7 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
                 <Weight className="w-3.5 h-3.5" /> Weight
               </p>
               <p className="text-sm font-semibold mt-1">
-                {selectedShipment.weight} kg
+                {activeShipment.weight} kg
               </p>
             </div>
             <div className="p-3 border rounded-lg bg-card">
@@ -225,7 +235,7 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
                 <DollarSign className="w-3.5 h-3.5" /> Delivery Fee
               </p>
               <p className="text-sm font-semibold mt-1">
-                ৳{selectedShipment.deliveryFee}
+                ৳{activeShipment.deliveryFee}
               </p>
             </div>
             <div className="p-3 border rounded-lg bg-card">
@@ -233,7 +243,7 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
                 <CreditCard className="w-3.5 h-3.5" /> COD Amount
               </p>
               <p className="text-sm font-semibold mt-1">
-                ৳{selectedShipment.codAmount}
+                ৳{activeShipment.codAmount}
               </p>
             </div>
           </div>
@@ -247,13 +257,13 @@ const ShipmentSheet = ({ selectedId, onClose, ...params }: Props) => {
               <div className="flex items-center justify-between bg-card p-3 rounded-lg border">
                 <div>
                   <h4 className="text-sm font-semibold">
-                    {selectedShipment.courier?.user.name}
+                    {activeShipment.courier?.user.name}
                   </h4>
                   <p className="text-xs text-muted-foreground">
-                    {selectedShipment.courier?.phone}
+                    {activeShipment.courier?.phone}
                   </p>
                   <span className="text-xs bg-muted px-2 py-0.5 rounded mt-1 inline-block">
-                    {selectedShipment.courier?.vehicleType}
+                    {activeShipment.courier?.vehicleType}
                   </span>
                 </div>
               </div>

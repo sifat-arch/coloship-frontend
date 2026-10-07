@@ -45,16 +45,20 @@ import { Lottie } from "lottie-react";
 
 interface DeliveryAnimationProps {
   className?: string;
+  lottieClassName?: string;
   loop?: boolean;
   autoplay?: boolean;
-  animationData: string; // অ্যানিমেশন অবজেক্ট বা ফাইল ডাইনামিক করার জন্য টাইপ
+  animationData: string;
+  rendererSettings?: Record<string, any>;
 }
 
 export default function DeliveryAnimation({
   className = "",
+  lottieClassName,
   loop = true,
   autoplay = true,
   animationData,
+  rendererSettings,
 }: DeliveryAnimationProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -78,7 +82,11 @@ export default function DeliveryAnimation({
         src={animationData}
         loop={loop}
         autoplay={autoplay}
-        className="w-full h-full max-h-52 object-contain pointer-events-none drop-shadow-md"
+        rendererSettings={rendererSettings}
+        className={
+          lottieClassName ||
+          "w-full h-full max-h-52 object-contain pointer-events-none drop-shadow-md"
+        }
       />
     </div>
   );

@@ -68,8 +68,12 @@ const UserTable = ({
           </TableHeader>
           <TableBody>
             {users.length > 0 ? (
-              users.map((user) => (
-                <TableRow key={user.id}>
+              users.map((user, idx) => (
+                <TableRow
+                  key={user.id}
+                  className="animate-table-row transition-colors hover:bg-primary/[0.04]"
+                  style={{ animationDelay: `${idx * 40}ms` }}
+                >
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase overflow-hidden border">

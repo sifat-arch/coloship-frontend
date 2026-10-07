@@ -1,7 +1,9 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { Input } from "../ui/input";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useResetPassword } from "@/hooks";
+import { resetPasswordValidationSchema } from "@/validation";
 import { Button } from "../ui/button";
 import {
   Field,
@@ -10,12 +12,9 @@ import {
   FieldLabel,
   FieldSeparator,
 } from "../ui/field";
-import { resetPasswordValidationSchema } from "@/validation";
-
-import { useRouter, useSearchParams } from "next/navigation";
-import { toast } from "../ui/toast";
+import { Input } from "../ui/input";
 import { Spinner } from "../ui/spinner";
-import { useResetPassword } from "@/hooks";
+import { toast } from "../ui/toast";
 
 const ResetPasswordForm = () => {
   const router = useRouter();

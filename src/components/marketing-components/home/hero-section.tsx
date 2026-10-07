@@ -1,403 +1,262 @@
-import {
-  ArrowRight,
-  CheckCircle2,
-  Clock,
-  MapPin,
-  Navigation,
-  Play,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  Truck,
-  Zap,
-} from "lucide-react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import {
+  Package,
+  ArrowRight,
+  Search,
+  Check,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import DeliveryAnimation from "./delivery-animation";
 
-const trustHighlights = [
-  {
-    icon: ShieldCheck,
-    label: "100% Verified Couriers",
-  },
-  {
-    icon: Navigation,
-    label: "Real-time GPS Tracking",
-  },
-  {
-    icon: Zap,
-    label: "Fastest COD & bKash Settlement",
-  },
-];
+export default function HeroSection() {
+  const router = useRouter();
+  const [trackingCode, setTrackingCode] = useState("");
 
-const routeStops = [
-  { label: "Booked", done: true },
-  { label: "Picked up", done: true },
-  { label: "In transit", done: true, current: true },
-  { label: "Delivered", done: false },
-];
+  const handleTrackSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (trackingCode.trim()) {
+      router.push(`/track?code=${encodeURIComponent(trackingCode.trim())}`);
+    } else {
+      router.push("/track");
+    }
+  };
 
-const ratingStars = [1, 2, 3, 4, 5];
-
-const customerAvatars = [
-  {
-    initials: "TA",
-    bg: "from-blue-600 to-indigo-600",
-  },
-  {
-    initials: "SR",
-    bg: "from-emerald-600 to-teal-600",
-  },
-  {
-    initials: "MK",
-    bg: "from-amber-500 to-orange-600",
-  },
-  {
-    initials: "NH",
-    bg: "from-purple-600 to-pink-600",
-  },
-];
-
-const HeroSection = () => {
   return (
-    <section className="relative isolate min-h-[90vh] overflow-hidden border-b border-border/60 bg-background py-14 sm:py-20 lg:py-24">
+    <section className="relative isolate flex flex-col justify-between overflow-hidden border-b border-border/60 bg-background pt-2 sm:pt-4 md:pt-5 lg:pt-6 pb-0 xl:min-h-[calc(100vh-4rem)]">
       {/* =========================================================================
-          1. CLEAN MOVING BACKGROUND: Animated Smooth Moving Gradient + Grid Matrix
+          1. BACKGROUND IMAGE: public/hero-section-background.png
       ========================================================================== */}
-      {/* Dynamic Animated Moving Gradient Canvas (Slow Smooth Color Shift) */}
       <div
         aria-hidden="true"
-        className="animate-moving-gradient pointer-events-none absolute inset-0 -z-20 bg-gradient-to-br from-primary/10 via-sky-400/10 via-background to-primary/5 opacity-90"
-      />
-
-      {/* Subtle Grid Pattern with Radial Mask */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 [mask-image:radial-gradient(ellipse_65%_60%_at_50%_30%,#000_20%,transparent_100%)]"
+        className="pointer-events-none absolute inset-0 -z-20 bg-cover bg-center bg-no-repeat"
         style={{
-          backgroundImage: `
-            linear-gradient(to right, rgba(100, 116, 139, 0.08) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(100, 116, 139, 0.08) 1px, transparent 1px)
-          `,
-          backgroundSize: "44px 44px",
+          backgroundImage: "url('/hero-section-background.png')",
         }}
       />
 
-      {/* Smooth Floating Glow Orb 1 (Top Center to Right) */}
+      {/* Subtle Ambient Radial Glow */}
       <div
         aria-hidden="true"
-        className="animate-orb-1 pointer-events-none absolute -top-24 left-1/2 -z-10 h-[480px] w-[560px] -translate-x-1/2 rounded-full bg-gradient-to-tr from-primary/15 via-sky-400/15 to-transparent blur-3xl"
+        className="pointer-events-none absolute -top-32 right-1/4 -z-10 h-[380px] w-[380px] rounded-full bg-gradient-to-br from-primary/10 via-sky-400/5 to-transparent blur-3xl"
       />
 
-      {/* Smooth Floating Glow Orb 2 (Left Bottom) */}
-      <div
-        aria-hidden="true"
-        className="animate-orb-2 pointer-events-none absolute top-1/3 -left-32 -z-10 h-[420px] w-[420px] rounded-full bg-sky-500/10 blur-3xl"
-      />
+      {/* Main Content Container (Compact Vertical Rhythm for 1-Page Fit) */}
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 my-auto">
+        <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-12 lg:gap-8">
+          {/* =========================================================================
+              2. LEFT COLUMN: Badge, Typography, Actions, Stats
+          ========================================================================== */}
+          <div className="flex flex-col items-start text-left lg:col-span-7">
+            {/* Top Pill Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35 }}
+              className="inline-flex items-center gap-2 rounded-full border border-sky-200/90 bg-white/95 px-3 py-1 text-[11px] sm:text-xs font-medium text-slate-700 shadow-2xs backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-200"
+            >
+              <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                99.8% On-Time Guarantee
+              </span>
+              <span className="text-slate-300 dark:text-slate-700 font-light">|</span>
+              <span className="text-primary font-medium">Nationwide Coverage</span>
+            </motion.div>
 
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:px-8">
-        {/* =========================================================================
-            2. COPY & TYPOGRAPHY: Pill Badge, Gradient Headline, CTAs, Social Proof
-        ========================================================================== */}
-        <div className="flex flex-col items-start text-left">
-          {/* Pill Badge (Announcement Pill with shimmer effect) */}
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3.5 py-1.5 text-xs font-semibold text-foreground backdrop-blur-md transition-all hover:border-primary/40 hover:bg-primary/10">
-            <span className="flex size-5 items-center justify-center rounded-full bg-primary/15 text-primary">
-              <Sparkles className="size-3" />
-            </span>
-            <span className="text-muted-foreground">ColoShip 2.0 Live:</span>
-            <span className="font-semibold text-primary">
-              Next-Gen Logistics Across Bangladesh
-            </span>
-            <ArrowRight className="size-3 text-primary/70" />
+            {/* Main Headline (Compact Scale to prevent vertical blowout) */}
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.08 }}
+              className="mt-3 sm:mt-3.5 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-4xl md:text-[44px] lg:text-[48px] xl:text-[52px] leading-[1.12]"
+            >
+              Anywhere in the
+              <br />
+              country,
+              <br />
+              <span className="relative inline-block text-primary">
+                on time.
+                {/* Subtle curved / wavy accent underline SVG */}
+                <svg
+                  className="absolute -bottom-1.5 left-0 w-full h-2.5 text-primary/45 -z-10"
+                  viewBox="0 0 200 12"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M2 8C35 2 68 12 101 6C134 0 167 10 198 4"
+                    stroke="currentColor"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </span>
+            </motion.h1>
+
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.15 }}
+              className="mt-3 max-w-xl text-xs sm:text-sm md:text-base leading-relaxed text-slate-600 dark:text-slate-300"
+            >
+              Four hundred and ninety-five upazilas, a thousand delivery points,
+              seventy-five hundred people on the road — one reliable logistics network.
+            </motion.p>
+
+            {/* Action Bar: Send a Parcel + Inline Track Search Form */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.2 }}
+              className="mt-4 sm:mt-5 flex w-full flex-col gap-2.5 sm:flex-row sm:items-center"
+            >
+              {/* Send a Parcel Button */}
+              <Link href="/customer/book-parcel" className="shrink-0">
+                <Button
+                  size="default"
+                  className="h-10 sm:h-11 w-full sm:w-auto gap-2 rounded-full bg-primary hover:bg-primary/90 text-white font-semibold px-5 text-xs sm:text-sm shadow-md shadow-primary/25 transition-all duration-200 active:scale-[0.98]"
+                >
+                  <Package className="size-4" />
+                  <span>Send a Parcel</span>
+                  <ArrowRight className="size-3.5 ml-0.5" />
+                </Button>
+              </Link>
+
+              {/* Inline Tracking Form */}
+              <form
+                onSubmit={handleTrackSubmit}
+                className="relative flex w-full sm:w-auto flex-1 max-w-sm items-center rounded-full border border-slate-200/90 bg-white/95 p-1 pl-3 shadow-2xs transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
+              >
+                <Search className="size-3.5 text-slate-400 shrink-0 mr-1.5" />
+                <input
+                  type="text"
+                  value={trackingCode}
+                  onChange={(e) => setTrackingCode(e.target.value)}
+                  placeholder="Track shipment link or code"
+                  className="w-full bg-transparent text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="shrink-0 rounded-full bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white transition-all hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90"
+                >
+                  Track
+                </button>
+              </form>
+            </motion.div>
+
+            {/* Micro-features Checklist */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.45, delay: 0.25 }}
+              className="mt-3 flex flex-wrap items-center gap-2 text-[11px] sm:text-xs font-medium text-slate-600 dark:text-slate-300"
+            >
+              <span className="flex items-center gap-1 font-semibold text-emerald-600 dark:text-emerald-400">
+                <Check className="size-3.5 stroke-[3]" />
+                No account required
+              </span>
+              <span className="text-slate-400">•</span>
+              <span>Doorstep pickup across all 64 districts</span>
+              <span className="text-slate-400">•</span>
+              <span>Real-time SMS</span>
+            </motion.div>
+
+            {/* Stat Pills Row */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.3 }}
+              className="mt-4 flex flex-wrap items-center gap-2 sm:gap-2.5"
+            >
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white/90 px-3 py-1 text-[11px] sm:text-xs text-slate-700 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-300">
+                <span className="size-2 rounded-full bg-blue-600" />
+                <strong className="font-bold text-slate-900 dark:text-white">495</strong>
+                <span className="text-slate-500">upazilas</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white/90 px-3 py-1 text-[11px] sm:text-xs text-slate-700 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-300">
+                <span className="size-2 rounded-full bg-blue-600" />
+                <strong className="font-bold text-slate-900 dark:text-white">1,000</strong>
+                <span className="text-slate-500">delivery hubs</span>
+              </div>
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white/90 px-3 py-1 text-[11px] sm:text-xs text-slate-700 shadow-2xs dark:border-slate-800 dark:bg-slate-900/90 dark:text-slate-300">
+                <span className="size-2 rounded-full bg-blue-600" />
+                <strong className="font-bold text-slate-900 dark:text-white">7,500</strong>
+                <span className="text-slate-500">delivery personnel</span>
+              </div>
+            </motion.div>
           </div>
 
-          {/* Main Headline with High-contrast Modern Gradient */}
-          <h1 className="mt-6 text-4xl leading-[1.08] font-extrabold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-[3.85rem]">
-            Lightning-Fast,
-            <span className="block bg-gradient-to-r from-primary via-indigo-600 to-sky-500 bg-clip-text text-transparent">
-              Reliable Parcel Delivery
-            </span>
-            You Can Trust.
-          </h1>
-
-          {/* Subheading */}
-          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-            Experience next-level parcel logistics across all 64 districts.
-            Doorstep pickup, live GPS milestone tracking, instant bKash COD
-            settlements, and zero hassle.
-          </p>
-
-          {/* Action Buttons (Dual Modern Pill Combo) */}
-          <div className="mt-8 flex w-full flex-col gap-3.5 sm:w-auto sm:flex-row sm:items-center">
-            {/* Primary Button: Solid Blue, rounded-full with glowing shadow & sliding arrow on hover */}
-            <div className="relative group w-full sm:w-auto">
-              {/* Soft Ambient Glow Layer */}
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute -inset-0.5 rounded-full bg-blue-600/40 opacity-70 blur-md transition-all duration-300 group-hover:opacity-100 group-hover:blur-lg"
-              />
-              <Button
-                size="lg"
-                className="relative h-12 w-full gap-2.5 rounded-full bg-blue-600 hover:bg-blue-700 px-7 text-base font-semibold text-white shadow-lg shadow-blue-500/25 transition-all duration-200 active:scale-[0.98] border border-blue-400/30 sm:w-auto"
-                nativeButton={false}
-                render={
-                  <Link
-                    href="/customer/book-parcel"
-                    className="flex items-center gap-2"
-                  >
-                    <span>Book a Parcel</span>
-                    <ArrowRight className="size-4.5 transition-transform duration-200 ease-out group-hover:translate-x-1" />
-                  </Link>
-                }
-              />
-            </div>
-
-            {/* Secondary Button: Pill rounded-full with border-blue-500/40, backdrop blur & hover glow fill */}
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-12 w-full gap-2.5 rounded-full border border-blue-500/40 bg-background/60 hover:bg-blue-600/10 hover:border-blue-500 px-7 text-base font-semibold text-foreground backdrop-blur-md transition-all duration-200 hover:shadow-md hover:shadow-blue-500/10 active:scale-[0.98] sm:w-auto"
-              nativeButton={false}
-              render={
-                <Link
-                  href="/customer/track"
-                  className="flex items-center gap-2"
-                >
-                  <Play className="size-4 fill-blue-600 text-blue-600" />
-                  <span>Track Parcel</span>
-                </Link>
-              }
+          {/* =========================================================================
+              3. RIGHT COLUMN: Scooter Animation (BORDERLESS - NO BOX) + Floating Badges
+          ========================================================================== */}
+          <div className="relative flex items-center justify-center lg:col-span-5">
+            {/* Soft Pastel Circular Backdrop (replaces harsh square box) */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute size-[260px] sm:size-[320px] rounded-full bg-gradient-to-tr from-sky-200/35 via-emerald-100/25 to-primary/15 blur-2xl -z-10"
             />
-          </div>
 
-          {/* Trust Highlights Checklist */}
-          <div className="mt-8 grid w-full grid-cols-1 gap-2.5 border-t border-border/70 pt-6 sm:grid-cols-3 sm:gap-4">
-            {trustHighlights.map((item) => (
-              <div key={item.label} className="flex items-center gap-2">
-                <div className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <item.icon className="size-3.5" />
+            {/* Scooter Lottie Animation Container (Completely Borderless) */}
+            <div className="relative flex w-full items-center justify-center">
+              {/* Floating Pill Badge 1 (Top-Right): Direct Doorstep Hub */}
+              <motion.div
+                animate={{ y: [0, -5, 0] }}
+                transition={{
+                  duration: 3.5,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+                className="absolute -top-2 right-1 sm:right-4 z-20 inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white/95 px-3 py-1 text-[11px] sm:text-xs font-semibold text-slate-800 shadow-md backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-100"
+              >
+                <span className="size-1.5 rounded-full bg-blue-600" />
+                <span>Direct Doorstep Hub</span>
+              </motion.div>
+
+              {/* Floating Pill Badge 2 (Middle-Left): Parcel Delivered • Just now */}
+              <motion.div
+                animate={{ y: [0, 5, 0] }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                  delay: 0.5,
+                }}
+                className="absolute top-1/3 -left-1 sm:left-0 z-20 inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white/95 px-3 py-1 text-[11px] sm:text-xs font-semibold text-slate-800 shadow-md backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-100"
+              >
+                <div className="flex size-4.5 items-center justify-center rounded-full bg-emerald-500 text-white">
+                  <Check className="size-2.5 stroke-[3]" />
                 </div>
-                <span className="text-xs font-medium text-muted-foreground">
-                  {item.label}
-                </span>
-              </div>
-            ))}
-          </div>
+                <span>Parcel Delivered</span>
+                <span className="text-[10px] font-normal text-slate-400">• Just now</span>
+              </motion.div>
 
-          {/* Social Proof Rating Card */}
-          <div className="mt-6 flex flex-wrap items-center gap-4">
-            <div className="flex -space-x-2.5 overflow-hidden">
-              {customerAvatars.map((customer) => (
-                <div
-                  key={customer.initials}
-                  className={`flex size-8.5 items-center justify-center rounded-full bg-gradient-to-br ${customer.bg} text-[11px] font-bold text-white ring-2 ring-background`}
-                >
-                  {customer.initials}
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-0.5">
-              <div className="flex items-center gap-1 text-amber-500">
-                {ratingStars.map((star) => (
-                  <Star key={star} className="size-3.5 fill-current" />
-                ))}
-                <span className="ml-1 text-xs font-bold text-foreground">
-                  4.9 / 5.0
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Trusted by <strong className="text-foreground">15,000+</strong>{" "}
-                merchants &amp; active shippers
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* =========================================================================
-            3. RIGHT SIDE: LOTTIE ANIMATION BANNER + INTERACTIVE TRACKING CARD
-        ========================================================================== */}
-        <div className="relative mx-auto flex w-full max-w-lg flex-col gap-5 lg:max-w-none">
-          {/* Backlight Glow */}
-          <div
-            aria-hidden="true"
-            className="absolute -inset-4 rounded-[3rem] bg-gradient-to-tr from-primary/25 via-sky-400/20 to-purple-500/20 opacity-70 blur-2xl -z-10"
-          />
-
-          {/* LOTTIE ANIMATION CARD (Delivery Service Animation) */}
-          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-card/95 via-card/85 to-primary/5 p-3.5 shadow-xl backdrop-blur-xl transition-all duration-300 hover:shadow-2xl hover:border-primary/40">
-            <div className="flex items-center justify-between px-3 pt-1 pb-1">
-              <div className="flex items-center gap-2">
-                <span className="flex size-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Live Logistics Fleet
-                </span>
-              </div>
-              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary">
-                Express Courier Active
-              </span>
-            </div>
-
-            <div className="relative h-44 sm:h-52 w-full flex items-center justify-center overflow-hidden rounded-2xl bg-muted/20">
+              {/* Pure Scooter Animation: NO BOX, NO BORDER, COMPACT HEIGHT */}
               <DeliveryAnimation
-                animationData={"/animation/delevery-service-lotty.json"}
-                className="w-full h-full max-h-52"
+                animationData="/animation/delevery-service-lotty.json"
+                className="w-full max-w-[340px] sm:max-w-[400px] lg:max-w-[440px] h-[210px] sm:h-[250px] md:h-[280px]"
+                lottieClassName="w-full h-full object-contain pointer-events-none drop-shadow-sm"
               />
-            </div>
-          </div>
-
-          {/* LIVE TRACKING CARD CONTAINER */}
-          <div className="relative rounded-3xl border border-border/80 bg-card/95 p-5 shadow-2xl backdrop-blur-xl sm:p-6 transition-all duration-300 hover:border-primary/30">
-            {/* Top Bar */}
-            <div className="flex items-center justify-between border-b border-border/60 pb-3.5">
-              <div className="flex items-center gap-3">
-                <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  <Truck className="size-4.5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">
-                    Live Tracking ID
-                  </span>
-                  <p className="font-mono text-sm font-bold text-foreground">
-                    CS-892410-BD
-                  </p>
-                </div>
-              </div>
-
-              {/* Pulsing Live Badge */}
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-600">
-                <span className="relative flex size-2">
-                  <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-500 opacity-75" />
-                  <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-                </span>
-                Live on Route
-              </div>
-            </div>
-
-            {/* Route Timeline Visualizer */}
-            <div className="relative mt-4 rounded-2xl border border-border/60 bg-muted/30 p-3.5">
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                {/* Pickup Origin */}
-                <div className="space-y-0.5">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
-                    <MapPin className="size-3 text-primary" /> Origin
-                  </span>
-                  <p className="text-xs font-bold text-foreground">Dhaka Hub</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Mirpur-10 Sector
-                  </p>
-                </div>
-
-                {/* Waypoint Center */}
-                <div className="relative flex flex-col items-center px-1">
-                  <div className="flex size-8 items-center justify-center rounded-full border border-primary/30 bg-primary/15 text-primary shadow-xs">
-                    <Navigation className="size-3.5 animate-pulse" />
-                  </div>
-                  <span className="mt-1 text-[9px] font-bold text-primary">
-                    Express 24h
-                  </span>
-                </div>
-
-                {/* Destination */}
-                <div className="space-y-0.5 text-right">
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
-                    <MapPin className="size-3 text-sky-500" /> Destination
-                  </span>
-                  <p className="text-xs font-bold text-foreground">
-                    Chattogram
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Agrabad C/A
-                  </p>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="mt-3.5 space-y-1.5">
-                <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div className="h-full w-[72%] rounded-full bg-gradient-to-r from-primary via-indigo-600 to-sky-500 transition-all duration-1000" />
-                </div>
-                <div className="flex items-center justify-between text-[10px] font-medium text-muted-foreground">
-                  {routeStops.map((stop) => (
-                    <span
-                      key={stop.label}
-                      className={
-                        stop.current
-                          ? "font-bold text-primary"
-                          : stop.done
-                            ? "text-foreground"
-                            : "text-muted-foreground/70"
-                      }
-                    >
-                      {stop.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Courier Rider Status Box */}
-            <div className="mt-3.5 flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-background/80 p-3 backdrop-blur-sm">
-              <div className="flex items-center gap-2.5">
-                <div className="relative flex size-9 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-sky-500 text-xs font-bold text-white shadow-xs">
-                  AR
-                  <span className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-background bg-emerald-500" />
-                </div>
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-xs font-bold text-foreground">
-                      Asif Rahman
-                    </p>
-                    <span className="rounded bg-primary/10 px-1.5 py-0.2 text-[9px] font-semibold text-primary">
-                      Verified Rider
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground">
-                    Estimated Delivery: Today by 4:30 PM
-                  </p>
-                </div>
-              </div>
-
-              <span className="rounded-md bg-emerald-500/10 px-2 py-1 text-[10px] font-bold text-emerald-600">
-                COD ৳ 1,450
-              </span>
-            </div>
-          </div>
-
-          {/* Floating Pill Badge 1: Top-Left outside the Lottie card header */}
-          <div className="animate-hero-float-reverse absolute -left-6 -top-4 z-20 hidden items-center gap-2 rounded-2xl border border-border/80 bg-card/95 px-3 py-1.5 text-xs font-semibold text-foreground shadow-xl backdrop-blur-md sm:flex">
-            <span className="flex size-6 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600">
-              <CheckCircle2 className="size-3.5" />
-            </span>
-            <div>
-              <p className="text-[10px] font-bold leading-none">
-                Doorstep Pickup
-              </p>
-              <p className="text-[9px] font-normal text-muted-foreground">
-                In 15 mins
-              </p>
-            </div>
-          </div>
-
-          {/* Floating Pill Badge 2: Bottom Right */}
-          <div className="animate-hero-float absolute -right-4 -bottom-3 z-20 hidden items-center gap-2 rounded-2xl border border-border/80 bg-card/95 px-3 py-1.5 text-xs font-semibold text-foreground shadow-xl backdrop-blur-md sm:flex">
-            <span className="flex size-6 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600">
-              <Clock className="size-3.5" />
-            </span>
-            <div>
-              <p className="text-[10px] font-bold leading-none">
-                99.4% On-Time
-              </p>
-              <p className="text-[9px] font-normal text-muted-foreground">
-                Express SLA
-              </p>
             </div>
           </div>
         </div>
       </div>
+
+      {/* =========================================================================
+          4. BOTTOM SECTION: 100% Full-Width Window Truck Animation (hero-truck.json)
+      ========================================================================== */}
+      <div className="mt-auto w-full overflow-hidden border-t border-slate-200/70 bg-gradient-to-b from-transparent to-slate-50/80 dark:border-slate-800/80 dark:to-slate-950/40 pt-1 pb-0 px-0">
+        <DeliveryAnimation
+          animationData="/animation/hero-truck.json"
+          className="w-full h-16 sm:h-20 md:h-24 lg:h-28 p-0 m-0"
+          lottieClassName="w-full h-full pointer-events-none block"
+          rendererSettings={{ preserveAspectRatio: "none" }}
+        />
+      </div>
     </section>
   );
-};
-
-export default HeroSection;
+}

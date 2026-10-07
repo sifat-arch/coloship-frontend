@@ -40,22 +40,24 @@ export function BookingSuccessModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md text-center">
+      <DialogContent className="sm:max-w-md text-center p-6 sm:p-7">
         <DialogHeader className="flex flex-col items-center justify-center text-center">
-          <div className="w-14 h-14 rounded-full bg-green-100 dark:bg-green-950/50 flex items-center justify-center text-green-600 mb-2">
+          <div className="w-16 h-16 rounded-full bg-emerald-500/15 text-emerald-600 ring-8 ring-emerald-500/10 flex items-center justify-center mb-3">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <DialogTitle className="text-xl">Parcel Booked Successfully!</DialogTitle>
-          <DialogDescription className="text-center">
+          <DialogTitle className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+            Parcel Booked Successfully!
+          </DialogTitle>
+          <DialogDescription className="text-center text-sm text-muted-foreground mt-1">
             Your delivery request has been registered in the system.
           </DialogDescription>
         </DialogHeader>
 
         {/* Tracking & Amount Details */}
-        <div className="bg-muted/50 rounded-xl p-4 my-2 border space-y-3 text-left">
-          <div className="flex justify-between items-center text-sm border-b pb-2">
-            <span className="text-muted-foreground">Tracking ID</span>
-            <span className="font-mono font-bold text-primary">
+        <div className="bg-muted/30 rounded-2xl p-4.5 my-3 border border-border/80 space-y-3 text-left">
+          <div className="flex justify-between items-center text-sm border-b pb-2.5">
+            <span className="text-muted-foreground text-xs uppercase font-medium">Tracking ID</span>
+            <span className="font-mono font-bold text-sm text-primary">
               {shipment.trackingNumber}
             </span>
           </div>

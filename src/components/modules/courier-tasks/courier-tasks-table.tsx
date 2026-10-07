@@ -74,9 +74,13 @@ const CourierTasksTable = ({
         </TableHeader>
         <TableBody>
           {filteredTasks.length > 0 ? (
-            filteredTasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell className="font-semibold text-primary">
+            filteredTasks.map((task, idx) => (
+              <TableRow
+                key={task.id}
+                className="animate-table-row transition-colors hover:bg-primary/[0.04]"
+                style={{ animationDelay: `${idx * 40}ms` }}
+              >
+                <TableCell className="font-mono font-bold text-xs text-primary">
                   #{task.trackingNumber}
                 </TableCell>
                 <TableCell>
@@ -129,6 +133,7 @@ const CourierTasksTable = ({
                   <Button
                     variant="outline"
                     size="sm"
+                    className="hover:border-primary/50 hover:text-primary transition-all text-xs h-8"
                     onClick={() => handleReview(task.id)}
                   >
                     Manage

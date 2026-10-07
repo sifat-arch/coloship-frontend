@@ -130,13 +130,14 @@ export default function ShipmentTable({
                   </TableCell>
                 </TableRow>
               ) : (
-                shipments.map((item) => {
+                shipments.map((item, idx) => {
                   const isCancellable = item.status === "CREATED";
 
                   return (
                     <TableRow
                       key={item.id}
-                      className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      className="cursor-pointer animate-table-row transition-all duration-200 hover:bg-primary/[0.04]"
+                      style={{ animationDelay: `${idx * 35}ms` }}
                       onClick={() => onSelectShipment(item.id)}
                     >
                       {/* Tracking ID */}

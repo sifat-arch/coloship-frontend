@@ -12,12 +12,14 @@ import {
 import CourierApprovalSheet from "./courier-approval-sheet";
 import { useDebounce } from "@/hooks/debounce.hook";
 
+import { Search } from "lucide-react";
+
 const CourierApprovalTabs = () => {
   const verificationStatus: ["ALL" | CourierVerificationStatus, string][] = [
-    ["APPROVED", "Approved"],
-    ["PENDING", "Pending"],
-    ["REJECTED", "Rejected"],
     ["ALL", "All"],
+    ["PENDING", "Pending"],
+    ["APPROVED", "Approved"],
+    ["REJECTED", "Rejected"],
   ];
   const [tab, setTeb] = useState<"ALL" | CourierVerificationStatus>("ALL");
   const [selectedId, setSelectedId] = useState("");
@@ -39,20 +41,22 @@ const CourierApprovalTabs = () => {
 
   return (
     <>
-      <div className="flex justify-between mb-4">
-        <div>
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between mb-6">
+        <div className="relative w-full sm:w-80">
+          <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           <Input
             type="search"
-            placeholder="Search by name or email"
+            placeholder="Search by name or email..."
             value={searchInput}
             onChange={(e) => handleSearch(e)}
+            className="w-full pl-9"
           />
         </div>
 
-        <Tabs value={tab} onValueChange={(value) => setTeb(value)}>
-          <TabsList>
+        <Tabs value={tab} onValueChange={(value) => setTeb(value as "ALL" | CourierVerificationStatus)} className="w-full sm:w-auto">
+          <TabsList className="w-full grid grid-cols-4 sm:flex sm:w-auto">
             {verificationStatus.map(([value, level]) => (
-              <TabsTrigger value={value} key={level}>
+              <TabsTrigger value={value} key={level} className="text-xs sm:text-sm">
                 {level}
               </TabsTrigger>
             ))}

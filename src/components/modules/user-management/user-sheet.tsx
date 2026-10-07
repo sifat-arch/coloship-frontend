@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -31,16 +32,26 @@ const UserSheet = ({ selectedId, onClose, ...params }: Props) => {
   const { data } = useGetAllUsers(params);
   const selectedUser = data?.data?.find((user) => user.id === selectedId);
 
+  const [cachedUser, setCachedUser] = useState(selectedUser);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setCachedUser(selectedUser);
+    }
+  }, [selectedUser]);
+
+  const activeUser = selectedUser || cachedUser;
+
   const { mutate: updateStatus, isPending } = useUpdateUserStatus();
 
-  if (!selectedUser) {
+  if (!activeUser) {
     return null;
   }
 
   const handleStatusChange = (newStatus: UserStatus) => {
     if (!selectedId) return;
 
-    if (selectedUser.status === newStatus) {
+    if (activeUser.status === newStatus) {
       toast.add({
         title: "Already in status",
         description: `This user account is already ${newStatus}.`,
@@ -70,7 +81,7 @@ const UserSheet = ({ selectedId, onClose, ...params }: Props) => {
     );
   };
 
-  const isAdmin = selectedUser.role === "ADMIN";
+  const isAdmin = activeUser.role === "ADMIN";
 
   const getStatusBadge = (status: UserStatus) => {
     switch (status) {
@@ -86,7 +97,7 @@ const UserSheet = ({ selectedId, onClose, ...params }: Props) => {
   };
 
   return (
-    <Sheet open={!!selectedId} onOpenChange={onClose}>
+    <Sheet open={Boolean(selectedId)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto flex flex-col justify-between p-6">
         <div className="space-y-6">
           <SheetHeader className="p-0 pb-4 border-b">
@@ -104,34 +115,34 @@ const UserSheet = ({ selectedId, onClose, ...params }: Props) => {
           {/* User Profile Card */}
           <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl border">
             <div className="relative w-16 h-16 rounded-full overflow-hidden bg-primary/10 border flex items-center justify-center text-primary font-bold text-2xl">
-              {selectedUser.imageUrl ? (
+              {activeUser.imageUrl ? (
                 <img
-                  src={selectedUser.imageUrl}
-                  alt={selectedUser.name}
+                  src={activeUser.imageUrl}
+                  alt={activeUser.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
-                selectedUser.name.charAt(0).toUpperCase()
+                activeUser.name.charAt(0).toUpperCase()
               )}
             </div>
             <div className="space-y-1">
               <h3 className="text-lg font-semibold capitalize">
-                {selectedUser.name}
+                {activeUser.name}
               </h3>
               <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5" />
-                {selectedUser.email}
+                {activeUser.email}
               </p>
               <div className="flex items-center gap-2 pt-1">
                 <span className="px-2 py-0.5 text-xs font-semibold rounded-md bg-secondary text-secondary-foreground border">
-                  {selectedUser.role}
+                  {activeUser.role}
                 </span>
                 <span
                   className={`px-2 py-0.5 text-xs font-semibold rounded-full border ${getStatusBadge(
-                    selectedUser.status,
+                    activeUser.status,
                   )}`}
                 >
-                  {selectedUser.status}
+                  {activeUser.status}
                 </span>
               </div>
             </div>
@@ -144,7 +155,7 @@ const UserSheet = ({ selectedId, onClose, ...params }: Props) => {
                 <Shield className="w-4 h-4 text-primary" /> User ID
               </p>
               <p className="text-xs font-mono font-medium truncate">
-                {selectedUser.id}
+                {activeUser.id}
               </p>
             </div>
 
@@ -153,7 +164,7 @@ const UserSheet = ({ selectedId, onClose, ...params }: Props) => {
                 <Calendar className="w-4 h-4 text-primary" /> Member Since
               </p>
               <p className="text-sm font-medium">
-                {new Date(selectedUser.createdAt).toLocaleDateString("en-US", {
+                {new Date(activeUser.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
                   month: "short",
                   day: "numeric",
@@ -176,30 +187,42 @@ const UserSheet = ({ selectedId, onClose, ...params }: Props) => {
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   <Button
-                    variant={selectedUser.status === "ACTIVE" ? "default" : "outline"}
+                    variant="outline"
                     size="sm"
-                    className="flex items-center gap-1.5 bg-green-600 hover:bg-green-700 text-white"
-                    disabled={isPending || selectedUser.status === "ACTIVE"}
+                    className={`flex items-center justify-center gap-1.5 transition-all font-semibold ${
+                      activeUser.status === "ACTIVE"
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm shadow-emerald-600/20"
+                        : "border-border hover:border-emerald-500/50 hover:text-emerald-600"
+                    }`}
+                    disabled={isPending || activeUser.status === "ACTIVE"}
                     onClick={() => handleStatusChange("ACTIVE")}
                   >
                     <CheckCircle className="w-4 h-4" /> Activate
                   </Button>
 
                   <Button
-                    variant={selectedUser.status === "SUSPENDED" ? "default" : "outline"}
+                    variant="outline"
                     size="sm"
-                    className="flex items-center gap-1.5 bg-yellow-600 hover:bg-yellow-700 text-white"
-                    disabled={isPending || selectedUser.status === "SUSPENDED"}
+                    className={`flex items-center justify-center gap-1.5 transition-all font-semibold ${
+                      activeUser.status === "SUSPENDED"
+                        ? "bg-amber-600 text-white border-amber-600 shadow-sm shadow-amber-600/20"
+                        : "border-border hover:border-amber-500/50 hover:text-amber-600"
+                    }`}
+                    disabled={isPending || activeUser.status === "SUSPENDED"}
                     onClick={() => handleStatusChange("SUSPENDED")}
                   >
                     <AlertTriangle className="w-4 h-4" /> Suspend
                   </Button>
 
                   <Button
-                    variant={selectedUser.status === "BLOCKED" ? "default" : "outline"}
+                    variant="outline"
                     size="sm"
-                    className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white"
-                    disabled={isPending || selectedUser.status === "BLOCKED"}
+                    className={`flex items-center justify-center gap-1.5 transition-all font-semibold ${
+                      activeUser.status === "BLOCKED"
+                        ? "bg-rose-600 text-white border-rose-600 shadow-sm shadow-rose-600/20"
+                        : "border-border hover:border-rose-500/50 hover:text-rose-600"
+                    }`}
+                    disabled={isPending || activeUser.status === "BLOCKED"}
                     onClick={() => handleStatusChange("BLOCKED")}
                   >
                     <Ban className="w-4 h-4" /> Block

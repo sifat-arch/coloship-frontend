@@ -24,11 +24,11 @@ export default function ApplyCourier() {
 
       <div className="relative hidden lg:flex lg:items-center lg:justify-center bg-muted overflow-hidden">
         <Image
-          src="/apply-courier.jpg"
+          src="/approve.jpg"
           alt="Apply Courier"
           fill
           priority
-          className="object-contain p-8 dark:brightness-[0.2] dark:grayscale"
+          // className="object-contain p-8 dark:brightness-[0.2] dark:grayscale"
         />
       </div>
     </div>

@@ -1,9 +1,10 @@
-import React from "react";
 import { GalleryVerticalEnd } from "lucide-react";
-import LoginForm from "@/components/from/login-form";
-import Link from "next/link";
 import Image from "next/image";
+import Link from "next/link";
+import React from "react";
 import Logo from "@/assets/svg/logo";
+import LoginForm from "@/components/from/login-form";
+
 const Login = () => {
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
@@ -14,14 +15,14 @@ const Login = () => {
           </Link>
         </div>
         <div className="flex flex-1 items-center justify-center">
-          <div className="w-full max-w-xs">
+          <div className="w-full max-w-sm sm:max-w-md">
             <LoginForm />
           </div>
         </div>
       </div>
       <div className="relative hidden bg-muted lg:block">
         <Image
-          src="/login.jpg"
+          src="/login1.jpg"
           alt="Image"
           fill
           className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"

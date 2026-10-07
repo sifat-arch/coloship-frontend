@@ -20,7 +20,7 @@ export default function AddressCard({ address }: AddressCardProps) {
   const IconComponent = getLabelIcon(address.label || "");
 
   return (
-    <Card className="border shadow-xs hover:shadow-sm transition-all bg-card overflow-hidden group">
+    <Card className="border border-border/70 shadow-xs hover:shadow-lg hover:-translate-y-1 hover:border-primary/40 transition-all duration-300 bg-card overflow-hidden group">
       <CardContent className="p-5 space-y-4">
         {/* Header with Label and Default Badge */}
         <div className="flex items-center justify-between">

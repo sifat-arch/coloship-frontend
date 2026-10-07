@@ -1,7 +1,10 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { Input } from "../ui/input";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForgotPassword } from "@/hooks";
+import { forgotPasswordSchema, loginCustomerSchema } from "@/validation";
 import { Button } from "../ui/button";
 import {
   Field,
@@ -10,13 +13,9 @@ import {
   FieldLabel,
   FieldSeparator,
 } from "../ui/field";
-import { forgotPasswordSchema, loginCustomerSchema } from "@/validation";
-import { useState } from "react";
-
-import { useRouter } from "next/navigation";
-import { toast } from "../ui/toast";
+import { Input } from "../ui/input";
 import { Spinner } from "../ui/spinner";
-import { useForgotPassword } from "@/hooks";
+import { toast } from "../ui/toast";
 
 const ForgotPasswordForm = () => {
   const router = useRouter();

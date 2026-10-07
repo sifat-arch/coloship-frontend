@@ -27,10 +27,10 @@ export default function DashboardShell({
   return (
     <SidebarProvider>
       <DashboardSidebar role={role} />
-      <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center justify-between border-b px-4">
+      <SidebarInset className="bg-background min-h-screen">
+        <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b border-border/70 bg-background/80 backdrop-blur-md px-4 sm:px-6 transition-all">
           <div className="flex items-center gap-2">
-            <SidebarTrigger className="-ml-1" />
+            <SidebarTrigger className="-ml-1 hover:bg-primary/10 hover:text-primary transition-colors" />
           </div>
 
           <div className="flex items-center gap-3">

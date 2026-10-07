@@ -6,7 +6,12 @@ import { toast } from "@/components/ui/toast";
 import { useGetMe, useLogout } from "@/hooks";
 import { UserRole } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValueEvent,
+  useScroll,
+} from "framer-motion";
 import { LogOut, Menu, User, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -26,6 +31,14 @@ const Header = () => {
     {
       name: "Services",
       url: "/services",
+    },
+    {
+      name: "Contact",
+      url: "/contact",
+    },
+    {
+      name: "Track",
+      url: "/track",
     },
   ];
 
@@ -87,7 +100,10 @@ const Header = () => {
     >
       <div className="flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8 mx-auto">
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-2 group transition-transform active:scale-95">
+        <Link
+          href="/"
+          className="flex items-center gap-2 group transition-transform active:scale-95"
+        >
           <Logo />
         </Link>
 
@@ -179,7 +195,11 @@ const Header = () => {
             className="flex size-9 items-center justify-center rounded-xl border border-border/70 bg-background/80 text-foreground shadow-xs"
             aria-label="Toggle menu"
           >
-            {mobileMenuOpen ? <X className="size-4.5" /> : <Menu className="size-4.5" />}
+            {mobileMenuOpen ? (
+              <X className="size-4.5" />
+            ) : (
+              <Menu className="size-4.5" />
+            )}
           </button>
         </div>
       </div>

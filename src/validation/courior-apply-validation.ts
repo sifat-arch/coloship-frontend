@@ -33,6 +33,8 @@ export const getCustomFileSchema = <T>(message: string) => {
   );
 };
 
+import { VehicleType } from "@/types";
+
 export const courierApplicationSchema = z.object({
   phone: z
     .string()
@@ -42,7 +44,9 @@ export const courierApplicationSchema = z.object({
       "Please enter a valid Bangladeshi phone number (e.g., 01712345678)",
     ),
 
-  vehicleType: z.string().min(1, "Vehicle type is required"),
+  vehicleType: z.nativeEnum(VehicleType, {
+    message: "Vehicle type is required",
+  }),
 
   nidNumber: z
     .string()

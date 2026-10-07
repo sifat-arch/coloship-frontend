@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -38,12 +39,22 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
     (courier) => courier.id === selectedId,
   );
 
+  const [cachedCourier, setCachedCourier] = useState(selectedCourier);
+
+  useEffect(() => {
+    if (selectedCourier) {
+      setCachedCourier(selectedCourier);
+    }
+  }, [selectedCourier]);
+
+  const activeCourier = selectedCourier || cachedCourier;
+
   const { mutate: approveCourier, isPending: approvePending } =
     useAcceptCourier();
   const { mutate: rejectCourier, isPending: rejectPending } =
     useRejectCourier();
 
-  if (!selectedCourier) {
+  if (!activeCourier) {
     return null;
   }
 
@@ -90,7 +101,7 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
   };
 
   return (
-    <Sheet open={!!selectedId} onOpenChange={onClose}>
+    <Sheet open={Boolean(selectedId)} onOpenChange={(open) => !open && onClose()}>
       <SheetContent className="w-full sm:max-w-xl overflow-y-auto flex flex-col justify-between p-6">
         <div>
           <SheetHeader className="p-0 pb-4 border-b">
@@ -107,39 +118,39 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
             {/* Top Profile Card */}
             <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-xl border">
               <div className="relative w-16 h-16 rounded-full overflow-hidden bg-gray-100 border">
-                {selectedCourier.profileImageUrl ? (
+                {activeCourier.profileImageUrl ? (
                   <img
-                    src={selectedCourier.profileImageUrl}
-                    alt={selectedCourier.user.name}
+                    src={activeCourier.profileImageUrl}
+                    alt={activeCourier.user.name}
                     className="w-full h-full object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-primary/10 text-primary font-bold text-xl">
-                    {selectedCourier.user.name.charAt(0)}
+                    {activeCourier.user.name.charAt(0)}
                   </div>
                 )}
               </div>
               <div>
                 <h3 className="text-lg font-semibold capitalize">
-                  {selectedCourier.user.name}
+                  {activeCourier.user.name}
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {selectedCourier.user.email}
+                  {activeCourier.user.email}
                 </p>
                 <div className="mt-1 flex items-center gap-2">
                   <span
                     className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                      selectedCourier.VerificationStatus === "APPROVED"
+                      activeCourier.VerificationStatus === "APPROVED"
                         ? "bg-green-100 text-green-700"
-                        : selectedCourier.VerificationStatus === "REJECTED"
+                        : activeCourier.VerificationStatus === "REJECTED"
                           ? "bg-red-100 text-red-700"
                           : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
-                    {selectedCourier.VerificationStatus}
+                    {activeCourier.VerificationStatus}
                   </span>
                   <span className="text-xs text-muted-foreground">
-                    • Role: {selectedCourier.role}
+                    • Role: {activeCourier.role}
                   </span>
                 </div>
               </div>
@@ -154,7 +165,7 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
                     Phone Number
                   </p>
                   <p className="text-sm font-semibold">
-                    {selectedCourier.phone}
+                    {activeCourier.phone}
                   </p>
                 </div>
               </div>
@@ -166,7 +177,7 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
                     Vehicle Type
                   </p>
                   <p className="text-sm font-semibold">
-                    {selectedCourier.vehicleType}
+                    {activeCourier.vehicleType}
                   </p>
                 </div>
               </div>
@@ -178,7 +189,7 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
                     NID Number
                   </p>
                   <p className="text-sm font-semibold">
-                    {selectedCourier.nidNumber || "N/A"}
+                    {activeCourier.nidNumber || "N/A"}
                   </p>
                 </div>
               </div>
@@ -190,7 +201,7 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
                     License Number
                   </p>
                   <p className="text-sm font-semibold">
-                    {selectedCourier.licenseNumber || "N/A"}
+                    {activeCourier.licenseNumber || "N/A"}
                   </p>
                 </div>
               </div>
@@ -202,12 +213,12 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
                 Vehicle Registration No:
               </span>
               <span className="text-sm font-bold bg-background px-3 py-1 rounded border shadow-sm">
-                {selectedCourier.vehicleNumber || "Not Provided"}
+                {activeCourier.vehicleNumber || "Not Provided"}
               </span>
             </div>
 
             {/* Resume / Document Link */}
-            {selectedCourier.resume && (
+            {activeCourier.resume && (
               <div className="p-4 rounded-xl border bg-muted/20 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <FileText className="w-8 h-8 text-primary" />
@@ -221,7 +232,7 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
                   </div>
                 </div>
                 <a
-                  href={selectedCourier.resume}
+                  href={activeCourier.resume}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
@@ -239,18 +250,18 @@ const CourierApprovalSheet = ({ selectedId, onClose, ...params }: Props) => {
             <Button
               variant="default"
               size="lg"
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20 font-semibold"
               onClick={() => handleReviewAction("APPROVED")}
-              disabled={selectedCourier.VerificationStatus !== "PENDING"}
+              disabled={activeCourier.VerificationStatus !== "PENDING" || approvePending}
             >
-              {approvePending ? "Approving..." : "Approve"}
+              {approvePending ? "Approving..." : "Approve Courier"}
             </Button>
             <Button
               variant="destructive"
               size="lg"
-              className="flex-1"
+              className="flex-1 shadow-sm shadow-destructive/20 font-semibold"
               onClick={() => handleReviewAction("REJECTED")}
-              disabled={selectedCourier.VerificationStatus !== "PENDING"}
+              disabled={activeCourier.VerificationStatus !== "PENDING" || rejectPending}
             >
               {rejectPending ? "Rejecting..." : "Reject"}
             </Button>

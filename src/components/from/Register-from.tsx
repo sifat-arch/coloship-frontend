@@ -1,6 +1,14 @@
 "use client";
+
 import { useForm } from "@tanstack/react-form";
+import { Eye, EyeClosed, Lock, Mail, User, UserPlus } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { useRegister } from "@/hooks";
+import { registerCustomerSchema } from "@/validation";
+import GoogleLoginComponent from "../modules/google-login/GoogleLogin";
+import { Button } from "../ui/button";
 import {
   Field,
   FieldError,
@@ -9,26 +17,22 @@ import {
   FieldSeparator,
 } from "../ui/field";
 import { Input } from "../ui/input";
-import { Eye, EyeClosed } from "lucide-react";
-import { Button } from "../ui/button";
-import GoogleLoginComponent from "../modules/google-login/GoogleLogin";
-import { registerCustomerSchema } from "@/validation";
-import { useRegister } from "@/hooks";
-import { toast } from "../ui/toast";
-import { useRouter } from "next/navigation";
 import { Spinner } from "../ui/spinner";
+import { toast } from "../ui/toast";
 
 const RegisterForm = () => {
-  const [showPassword, setShowPassword] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const { mutate: register, isPending: registerPending } = useRegister();
   const router = useRouter();
+
   const form = useForm({
     defaultValues: {
-      name: "Sifat",
-      email: "sifatnix@gmail.com",
-      password: "12345678",
-      confirmPassword: "12345678",
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     },
     validators: {
       onSubmit: registerCustomerSchema,
@@ -48,10 +52,12 @@ const RegisterForm = () => {
               description: "Registration Failure Because server failed",
               type: "error",
             });
+            return;
           }
           toast.add({
             title: "Register Successful",
-            description: "Please verify Your Account",
+            description:
+              "Please verify your account with the code sent to your email.",
             type: "success",
           });
           const params = new URLSearchParams({ email: registrationData.email });
@@ -61,23 +67,26 @@ const RegisterForm = () => {
           toast.add({
             title: "Registration Failure",
             description:
-              error.message || "Registration Failed,Something went wrong",
+              error.message || "Registration Failed, Something went wrong",
             type: "error",
           });
         },
       });
     },
   });
+
   return (
     <div className="w-full">
       {/* Heading */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-          Welcome back
+      <div className="mb-7">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-3">
+          Join Coloship
+        </span>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          Create an account
         </h1>
-
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Enter your email and password to access your Coloship account.
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          Sign up to start sending, managing, and tracking your parcels.
         </p>
       </div>
 
@@ -88,8 +97,8 @@ const RegisterForm = () => {
           form.handleSubmit();
         }}
       >
-        <FieldGroup className="gap-5">
-          {/* name */}
+        <FieldGroup className="gap-4 sm:gap-5">
+          {/* Full Name */}
           <form.Field name="name">
             {(field) => {
               const isInvalid =
@@ -99,29 +108,35 @@ const RegisterForm = () => {
                 <Field data-invalid={isInvalid}>
                   <FieldLabel
                     htmlFor={field.name}
-                    className="text-sm font-medium"
+                    className="text-sm font-semibold text-foreground/90"
                   >
-                    Your Name
+                    Full Name
                   </FieldLabel>
 
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="text"
-                    placeholder="you@example.com"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    autoComplete="email"
-                    aria-invalid={isInvalid}
-                    className="h-11"
-                  />
+                  <div className="relative mt-1.5">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted-foreground">
+                      <User className="size-4" />
+                    </div>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="text"
+                      placeholder="John Doe"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      autoComplete="name"
+                      aria-invalid={isInvalid}
+                      className="h-11 rounded-xl bg-muted/20 pl-10 pr-4 text-sm transition-all focus:bg-background focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
 
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}
           </form.Field>
+
           {/* Email */}
           <form.Field name="email">
             {(field) => {
@@ -132,23 +147,28 @@ const RegisterForm = () => {
                 <Field data-invalid={isInvalid}>
                   <FieldLabel
                     htmlFor={field.name}
-                    className="text-sm font-medium"
+                    className="text-sm font-semibold text-foreground/90"
                   >
                     Email address
                   </FieldLabel>
 
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="email"
-                    placeholder="you@example.com"
-                    value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                    onBlur={field.handleBlur}
-                    autoComplete="email"
-                    aria-invalid={isInvalid}
-                    className="h-11"
-                  />
+                  <div className="relative mt-1.5">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted-foreground">
+                      <Mail className="size-4" />
+                    </div>
+                    <Input
+                      id={field.name}
+                      name={field.name}
+                      type="email"
+                      placeholder="you@example.com"
+                      value={field.state.value}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                      onBlur={field.handleBlur}
+                      autoComplete="email"
+                      aria-invalid={isInvalid}
+                      className="h-11 rounded-xl bg-muted/20 pl-10 pr-4 text-sm transition-all focus:bg-background focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
+                    />
+                  </div>
 
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
@@ -164,47 +184,52 @@ const RegisterForm = () => {
 
               return (
                 <Field data-invalid={isInvalid}>
-                  <div className="flex items-center justify-between">
-                    <FieldLabel
-                      htmlFor={field.name}
-                      className="text-sm font-medium"
-                    >
-                      Password
-                    </FieldLabel>
-                  </div>
-                  <div className="relative">
+                  <FieldLabel
+                    htmlFor={field.name}
+                    className="text-sm font-semibold text-foreground/90"
+                  >
+                    Password
+                  </FieldLabel>
+
+                  <div className="relative mt-1.5">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted-foreground">
+                      <Lock className="size-4" />
+                    </div>
                     <Input
                       id={field.name}
                       name={field.name}
                       type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      placeholder="Create a strong password"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      autoComplete="current-password"
+                      autoComplete="new-password"
                       aria-invalid={isInvalid}
-                      className="h-11"
+                      className="h-11 rounded-xl bg-muted/20 pl-10 pr-11 text-sm transition-all focus:bg-background focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground transition-colors hover:text-foreground"
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
                     >
                       {showPassword ? (
-                        <EyeClosed size={15} />
+                        <EyeClosed className="size-4" />
                       ) : (
-                        <Eye size={15} />
+                        <Eye className="size-4" />
                       )}
                     </button>
                   </div>
+
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}
           </form.Field>
 
-          {/* confirm password */}
-
+          {/* Confirm Password */}
           <form.Field name="confirmPassword">
             {(field) => {
               const isInvalid =
@@ -212,76 +237,96 @@ const RegisterForm = () => {
 
               return (
                 <Field data-invalid={isInvalid}>
-                  <div className="flex items-center justify-between">
-                    <FieldLabel
-                      htmlFor={field.name}
-                      className="text-sm font-medium"
-                    >
-                      Confirm Password
-                    </FieldLabel>
-                  </div>
-                  <div className="relative">
+                  <FieldLabel
+                    htmlFor={field.name}
+                    className="text-sm font-semibold text-foreground/90"
+                  >
+                    Confirm Password
+                  </FieldLabel>
+
+                  <div className="relative mt-1.5">
+                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-muted-foreground">
+                      <Lock className="size-4" />
+                    </div>
                     <Input
                       id={field.name}
                       name={field.name}
-                      type={showPassword ? "text" : "password"}
-                      placeholder="Enter your password"
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="Re-enter your password"
                       value={field.state.value}
                       onChange={(e) => field.handleChange(e.target.value)}
                       onBlur={field.handleBlur}
-                      autoComplete="current-password"
+                      autoComplete="new-password"
                       aria-invalid={isInvalid}
-                      className="h-11"
+                      className="h-11 rounded-xl bg-muted/20 pl-10 pr-11 text-sm transition-all focus:bg-background focus:border-primary/50 focus:ring-2 focus:ring-primary/20"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-muted-foreground transition-colors hover:text-foreground"
+                      aria-label={
+                        showConfirmPassword
+                          ? "Hide confirm password"
+                          : "Show confirm password"
+                      }
                     >
-                      {showPassword ? (
-                        <EyeClosed size={15} />
+                      {showConfirmPassword ? (
+                        <EyeClosed className="size-4" />
                       ) : (
-                        <Eye size={15} />
+                        <Eye className="size-4" />
                       )}
                     </button>
                   </div>
+
                   {isInvalid && <FieldError errors={field.state.meta.errors} />}
                 </Field>
               );
             }}
           </form.Field>
+
           {/* Submit */}
           <Button
             type="submit"
-            className="mt-1 h-11 w-full font-medium"
+            className="mt-2 h-11 w-full rounded-xl bg-primary text-primary-foreground font-semibold shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 hover:bg-primary/90 active:scale-[0.99] transition-all duration-200 cursor-pointer"
             disabled={registerPending}
           >
             {registerPending ? (
-              <>
-                <Spinner /> Submitting
-              </>
+              <span className="flex items-center gap-2">
+                <Spinner /> Creating account...
+              </span>
             ) : (
-              "Submit"
+              <span className="flex items-center gap-2">
+                <UserPlus className="size-4" />
+                Create account
+              </span>
             )}
-            Register
           </Button>
         </FieldGroup>
       </form>
 
       {/* Separator */}
-      <div className="my-4">
-        <FieldSeparator className="my-0">Or</FieldSeparator>
+      <div className="my-6">
+        <FieldSeparator className="my-0">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            Or continue with
+          </span>
+        </FieldSeparator>
       </div>
 
       {/* Google Login */}
       <GoogleLoginComponent />
 
-      {/* Register */}
-      <p className="mt-6 text-center text-sm text-muted-foreground">
+      {/* Sign In Link */}
+      <p className="mt-8 text-center text-sm text-muted-foreground">
         Already have an account?{" "}
-        <a href="/login" className="font-medium text-primary hover:underline">
-          Login
-        </a>
+        <Link
+          href="/login"
+          className="font-semibold text-primary transition-colors hover:text-primary/80 hover:underline"
+        >
+          Sign in
+        </Link>
       </p>
     </div>
   );

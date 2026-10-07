@@ -1,15 +1,8 @@
 "use client";
 import { useForm } from "@tanstack/react-form";
-import React from "react";
-import {
-  Field,
-  FieldDescription,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "../ui/field";
 import {
   BadgeCheck,
+  ChevronDown,
   FileText,
   FileUp,
   MapPin,
@@ -18,25 +11,33 @@ import {
   User,
   X,
 } from "lucide-react";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
 import Link from "next/link";
+import React from "react";
+import { useApplyAsCourier } from "@/hooks";
+import { VehicleType, type courierApplicationPayload } from "@/types";
+import { formatFileSize } from "@/utils";
 import {
   courierApplicationSchema,
   isAcceptedFileSize,
   isAcceptedFileType,
   MAX_FILE_SIZE,
 } from "@/validation";
-import { formatFileSize } from "@/utils";
-import { useApplyAsCourier } from "@/hooks";
-import { courierApplicationPayload } from "@/types";
+import { Button } from "../ui/button";
+import {
+  Field,
+  FieldDescription,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "../ui/field";
+import { Input } from "../ui/input";
 import { Spinner } from "../ui/spinner";
 import { toast } from "../ui/toast";
 
 // আপনার ডিফাইন করা টাইপ
 export type courierApplicationData = {
   phone: string;
-  vehicleType: string;
+  vehicleType: VehicleType | string;
   nidNumber: string;
   vehicleNumber: string;
   licenseNumber: string;
@@ -159,18 +160,34 @@ const ApplyCourierForm = () => {
                   <Field data-invalid={isInvalid}>
                     <FieldLabel htmlFor={field.name}>Vehicle type</FieldLabel>
                     <div className="relative">
-                      <Truck className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-                      <Input
+                      <Truck className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground z-10" />
+                      <select
                         id={field.name}
                         name={field.name}
-                        type="text"
-                        placeholder="BIKE"
                         value={field.state.value}
                         onBlur={field.handleBlur}
                         onChange={(e) => field.handleChange(e.target.value)}
                         aria-invalid={isInvalid}
-                        className="pl-9"
-                      />
+                        className={`h-8 w-full appearance-none rounded-lg border border-input bg-transparent pl-9 pr-8 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 cursor-pointer ${
+                          !field.state.value
+                            ? "text-muted-foreground"
+                            : "text-foreground"
+                        }`}
+                      >
+                        <option value="" disabled className="bg-background text-muted-foreground">
+                          Select vehicle type
+                        </option>
+                        {Object.values(VehicleType).map((type) => (
+                          <option
+                            key={type}
+                            value={type}
+                            className="bg-background text-foreground"
+                          >
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
                     </div>
                     {isInvalid && (
                       <FieldError errors={field.state.meta.errors} />

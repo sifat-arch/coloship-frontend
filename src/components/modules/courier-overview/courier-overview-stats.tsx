@@ -58,7 +58,7 @@ const CourierOverviewStats = () => {
       value: isLoading ? "..." : (stats?.activeTasks ?? 0),
       description: "Deliveries in progress",
       icon: Truck,
-      color: "text-blue-600 bg-blue-100",
+      color: "text-primary bg-primary/10 border border-primary/20",
       link: "/courier/tasks",
     },
     {
@@ -66,7 +66,7 @@ const CourierOverviewStats = () => {
       value: isLoading ? "..." : (stats?.completedToday ?? 0),
       description: "Parcels delivered today",
       icon: CheckCircle2,
-      color: "text-green-600 bg-green-100",
+      color: "text-emerald-600 bg-emerald-500/10 border border-emerald-500/20",
       link: "/courier/tasks",
     },
     {
@@ -74,7 +74,7 @@ const CourierOverviewStats = () => {
       value: isLoading ? "..." : `৳${Number(stats?.todayCodCollected ?? 0).toLocaleString()}`,
       description: "Cash collected today",
       icon: DollarSign,
-      color: "text-amber-600 bg-amber-100",
+      color: "text-amber-600 bg-amber-500/10 border border-amber-500/20",
       link: "/courier/tasks",
     },
     {
@@ -82,7 +82,7 @@ const CourierOverviewStats = () => {
       value: isLoading ? "..." : (stats?.totalCompleted ?? 0),
       description: "Lifetime successful deliveries",
       icon: PackageCheck,
-      color: "text-purple-600 bg-purple-100",
+      color: "text-purple-600 bg-purple-500/10 border border-purple-500/20",
       link: "/courier/tasks",
     },
   ];
@@ -90,14 +90,14 @@ const CourierOverviewStats = () => {
   return (
     <div className="space-y-6">
       {/* Availability Status Banner Card */}
-      <div className="p-4 md:p-5 rounded-2xl border bg-card shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-4 md:p-5 rounded-2xl border bg-card shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5">
           <div
             className={`w-3.5 h-3.5 rounded-full ${
               isSuspended
-                ? "bg-amber-500 ring-4 ring-amber-100"
+                ? "bg-amber-500 ring-4 ring-amber-100 dark:ring-amber-950"
                 : isOnline
-                  ? "bg-green-500 animate-pulse ring-4 ring-green-100"
+                  ? "bg-emerald-500 animate-pulse ring-4 ring-emerald-100 dark:ring-emerald-950"
                   : "bg-gray-400"
             }`}
           />
@@ -109,7 +109,7 @@ const CourierOverviewStats = () => {
                   isSuspended
                     ? "text-amber-600"
                     : isOnline
-                      ? "text-green-600"
+                      ? "text-emerald-600"
                       : "text-muted-foreground"
                 }
               >
@@ -140,8 +140,8 @@ const CourierOverviewStats = () => {
             isSuspended
               ? "opacity-60 cursor-not-allowed bg-muted text-muted-foreground"
               : !isOnline
-                ? "bg-green-600 hover:bg-green-700 text-white"
-                : "border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20"
+                : "border-red-200 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-700"
           }`}
         >
           <Power className="w-4 h-4" />
@@ -161,18 +161,18 @@ const CourierOverviewStats = () => {
           const Icon = item.icon;
           return (
             <Link key={item.title} href={item.link}>
-              <Card className="hover:shadow-md transition-shadow cursor-pointer h-full border">
+              <Card className="hover:shadow-lg hover:-translate-y-1 hover:border-primary/40 transition-all duration-300 cursor-pointer h-full border">
                 <CardContent className="p-5 flex flex-col justify-between h-full">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-muted-foreground">
+                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                       {item.title}
                     </p>
-                    <div className={`p-2.5 rounded-lg ${item.color}`}>
+                    <div className={`p-2.5 rounded-xl ${item.color}`}>
                       <Icon className="w-5 h-5" />
                     </div>
                   </div>
                   <div className="mt-4 space-y-1">
-                    <h3 className="text-2xl font-bold tracking-tight">
+                    <h3 className="text-2xl font-bold tracking-tight text-foreground">
                       {item.value}
                     </h3>
                     <p className="text-xs text-muted-foreground">

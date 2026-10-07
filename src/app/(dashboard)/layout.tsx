@@ -4,7 +4,7 @@ import React, { ReactNode } from "react";
 const DashboardLayout = ({ children }: { children: ReactNode }) => {
   return (
     <AuthGuard>
-      <div>generic dashboard layout{children}</div>;
+      <div>{children}</div>;
     </AuthGuard>
   );
 };

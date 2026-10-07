@@ -42,20 +42,21 @@ const ShipmentTabs = () => {
 
   return (
     <>
-      <div className="flex justify-between mb-4">
-        <div>
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center justify-between mb-6">
+        <div className="relative w-full sm:w-80">
           <Input
             type="search"
-            placeholder="Search by tracking, name or email"
+            placeholder="Search tracking, customer, or email..."
             value={searchInput}
             onChange={(e) => handleSearch(e)}
+            className="w-full"
           />
         </div>
 
-        <Tabs value={tab} onValueChange={handleTabChange}>
-          <TabsList>
+        <Tabs value={tab} onValueChange={handleTabChange} className="w-full sm:w-auto">
+          <TabsList className="w-full grid grid-cols-2 sm:grid-cols-5 sm:flex sm:w-auto h-auto p-1">
             {shipmentStatuses.map(([value, label]) => (
-              <TabsTrigger value={value} key={value}>
+              <TabsTrigger value={value} key={value} className="text-xs sm:text-sm py-1.5">
                 {label}
               </TabsTrigger>
             ))}
