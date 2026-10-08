@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const BookParcelPage = () => {
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
       {/* Page Header */}
       <div className="border-b pb-5">
         <div className="flex items-center gap-2 text-primary mb-1">

@@ -9,9 +9,24 @@ import FirstEverywhere from "@/components/home/first-everywhere";
 import FadeInWhenVisible from "@/components/ui/fade-in-when-visible";
 
 export const metadata: Metadata = {
-  title: "About Us | Coloship — Courier & Parcel Delivery",
+  title: "About Us",
   description:
     "Coloship is a premier courier and logistics network connecting all 64 districts of Bangladesh with fast delivery, real-time tracking, COD, and seamless merchant services.",
+  openGraph: {
+    title: "About Us | Coloship",
+    description:
+      "Learn about Coloship's mission, leadership, and nationwide logistics infrastructure connecting every district of Bangladesh.",
+    url: "/about-us",
+    siteName: "Coloship",
+    images: [
+      {
+        url: "/hero-section-background.png",
+        width: 1200,
+        height: 630,
+        alt: "About Coloship",
+      },
+    ],
+  },
 };
 
 const AboutUs = () => {

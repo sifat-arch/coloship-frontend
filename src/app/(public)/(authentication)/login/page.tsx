@@ -1,9 +1,22 @@
+import type { Metadata } from "next";
 import { GalleryVerticalEnd } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import Logo from "@/assets/svg/logo";
 import LoginForm from "@/components/from/login-form";
+
+export const metadata: Metadata = {
+  title: "Sign In",
+  description:
+    "Sign in to your Coloship account to manage parcels, track bookings, and access customer, courier, or admin dashboards.",
+  openGraph: {
+    title: "Sign In | Coloship",
+    description: "Access your Coloship account to manage parcels and track deliveries.",
+    url: "/login",
+    siteName: "Coloship",
+  },
+};
 
 const Login = () => {
   return (

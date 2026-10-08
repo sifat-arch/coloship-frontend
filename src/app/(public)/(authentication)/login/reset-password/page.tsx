@@ -1,5 +1,17 @@
+import type { Metadata } from "next";
 import ResetPasswordForm from "@/components/from/reset-password-form";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Reset Password",
+  description: "Set a new secure password for your Coloship account.",
+  openGraph: {
+    title: "Reset Password | Coloship",
+    description: "Set a new secure password for your Coloship account.",
+    url: "/login/reset-password",
+    siteName: "Coloship",
+  },
+};
 
 const ResetPassword = () => {
   return (

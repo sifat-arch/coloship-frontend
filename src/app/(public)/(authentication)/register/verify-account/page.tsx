@@ -1,8 +1,20 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import Logo from "@/assets/svg/logo";
 import VerifyAccountFrom from "@/components/from/verify-account-from";
+
+export const metadata: Metadata = {
+  title: "Verify Account",
+  description: "Verify your email or OTP to activate your Coloship account.",
+  openGraph: {
+    title: "Verify Account | Coloship",
+    description: "Verify your email or OTP to activate your Coloship account.",
+    url: "/register/verify-account",
+    siteName: "Coloship",
+  },
+};
 
 const VerifyAccountPage = () => {
   return (

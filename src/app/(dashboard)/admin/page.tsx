@@ -8,7 +8,7 @@ import Link from "next/link";
 
 const AdminDashboard = () => {
   return (
-    <section className="p-6 md:p-8 space-y-8">
+    <section className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
       {/* Header & Quick Action Buttons */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
         <div className="space-y-1">

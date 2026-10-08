@@ -1,8 +1,29 @@
+import type { Metadata } from "next";
 import Logo from "@/assets/svg/logo";
 import ApplyCourierForm from "@/components/from/apply-courier-from";
 
 import Image from "next/image";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Become a Courier Rider",
+  description:
+    "Apply to become a verified Coloship delivery rider. Earn competitive income with flexible schedules across Bangladesh.",
+  openGraph: {
+    title: "Become a Courier Partner | Coloship",
+    description: "Join Coloship as a delivery rider and earn with timely payouts.",
+    url: "/courier-apply",
+    siteName: "Coloship",
+    images: [
+      {
+        url: "/approve.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Coloship Courier Partner",
+      },
+    ],
+  },
+};
 
 export default function ApplyCourier() {
   return (

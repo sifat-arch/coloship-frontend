@@ -62,9 +62,9 @@ export default function CustomerDashboardOverview() {
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-6">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
       {/* 1. Welcome Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-card border p-6 sm:p-8 shadow-xs">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-card border p-5 sm:p-8 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
           <div className="space-y-2 max-w-xl">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">

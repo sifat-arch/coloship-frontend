@@ -1,4 +1,16 @@
+import type { Metadata } from "next";
 import ForgotPasswordForm from "@/components/from/frogot-password-form";
+
+export const metadata: Metadata = {
+  title: "Forgot Password",
+  description: "Reset your Coloship account password securely via email verification.",
+  openGraph: {
+    title: "Forgot Password | Coloship",
+    description: "Reset your Coloship account password securely.",
+    url: "/login/forgot-password",
+    siteName: "Coloship",
+  },
+};
 
 const ForgotPassword = () => {
   return (

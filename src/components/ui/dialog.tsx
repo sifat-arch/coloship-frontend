@@ -46,9 +46,13 @@ function DialogContent({
   return (
     <DialogPortal>
       <DialogOverlay />
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto custom-scrollbar">
+      <div
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto custom-scrollbar overscroll-contain"
+        data-lenis-prevent
+      >
         <DialogPrimitive.Popup
           data-slot="dialog-content"
+          data-lenis-prevent
           className={cn(
             "relative w-full max-w-lg rounded-2xl border border-border/70 bg-card p-5 sm:p-6 shadow-2xl ring-1 ring-primary/10 transition-all duration-300 ease-out focus-visible:outline-none",
             className

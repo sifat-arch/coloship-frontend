@@ -1,9 +1,22 @@
+import type { Metadata } from "next";
 import { GalleryVerticalEnd } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import Logo from "@/assets/svg/logo";
 import RegisterForm from "@/components/from/Register-from";
+
+export const metadata: Metadata = {
+  title: "Create an Account",
+  description:
+    "Register for a Coloship account to start booking parcel deliveries, manage doorstep pickups, and track packages nationwide.",
+  openGraph: {
+    title: "Create an Account | Coloship",
+    description: "Join Coloship for fast courier and parcel delivery services.",
+    url: "/register",
+    siteName: "Coloship",
+  },
+};
 
 const Register = () => {
   return (

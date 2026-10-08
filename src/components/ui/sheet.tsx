@@ -232,11 +232,16 @@ function SheetContent({
   return createPortal(
     <AnimatePresence mode="wait">
       {open && (
-        <div className="fixed inset-0 z-50 overflow-hidden" data-slot="sheet-portal">
-          <SheetOverlay />
+        <div
+          className="fixed inset-0 z-50 overflow-hidden"
+          data-slot="sheet-portal"
+          data-lenis-prevent
+        >
+          <SheetOverlay data-lenis-prevent />
           <motion.div
             key="sheet-content"
             data-slot="sheet-content"
+            data-lenis-prevent
             data-side={side}
             variants={slideVariants[side]}
             initial="initial"
@@ -245,13 +250,17 @@ function SheetContent({
             transition={sheetSpringTransition}
             style={style}
             className={cn(
-              "fixed z-50 flex flex-col gap-4 bg-card text-sm text-card-foreground shadow-2xl custom-scrollbar",
+              "fixed z-50 flex flex-col gap-4 bg-card text-sm text-card-foreground shadow-2xl custom-scrollbar overscroll-contain",
               side === "right" && "inset-y-0 right-0 h-full w-full sm:max-w-lg border-l border-border/80",
               side === "left" && "inset-y-0 left-0 h-full w-full sm:max-w-lg border-r border-border/80",
               side === "top" && "inset-x-0 top-0 h-auto border-b border-border/80",
               side === "bottom" && "inset-x-0 bottom-0 h-auto max-h-[90vh] rounded-t-2xl border-t border-border/80",
               className
             )}
+            onWheel={(e) => {
+              props.onWheel?.(e);
+              e.stopPropagation();
+            }}
             {...(props as any)}
           >
             {children}
